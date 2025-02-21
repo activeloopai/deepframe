@@ -77,6 +77,8 @@ PYBIND11_MODULE(pyvframe, m) {
 
   m.def(
       "get_video_info",
-      [](const std::string &url) { return codecs::get_video_info(url); },
+      [](const std::string &url) {
+        return codecs::get_video_info(url);
+      },
       py::arg("url"));
 }

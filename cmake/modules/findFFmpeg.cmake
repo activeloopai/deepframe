@@ -52,9 +52,6 @@ macro(build_ffmpeg_once)
         endif()
 
         set(FFMPEG_EP_DEPENDS)
-        if (TARGET zlib_ep)
-            list(APPEND FFMPEG_EP_DEPENDS zlib_ep)
-        endif()
 
         message(STATUS "Building FFmpeg with extra arguments: ${EXTRA_ARGUMENTS}")
 

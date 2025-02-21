@@ -35,9 +35,9 @@ endif()
 
 ensure_ffmpeg()
 
-target_include_directories(pyvframe PUBLIC ${FFMPEG_INCLUDE_DIRS})
+target_include_directories(pyvframe PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_sources(pyvframe PRIVATE video.cpp)
-target_link_libraries(pyvframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg)
+target_link_libraries(pyvframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg OpenSSL::SSL OpenSSL::Crypto)
 
 # Installation
 install(TARGETS pyvframe DESTINATION ${CMAKE_INSTALL_PREFIX}/)

@@ -1,6 +1,7 @@
 #include "video.hpp"
 
 #include <algorithm>
+#include <openssl/ssl.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -11,6 +12,13 @@ extern "C" {
 }
 
 namespace {
+struct GlobalInitializer {
+  GlobalInitializer() {
+    OPENSSL_init_ssl(0, nullptr); // Initializes SSL library
+    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, nullptr);
+  }
+};
+
 core::buffer_ptr extract_video_frames_from_video_at_url_(
     const std::string &url, const std::vector<int64_t> &original_indices,
     AVPixelFormat force_pixel_format = AV_PIX_FMT_NONE) {
@@ -296,6 +304,9 @@ core::buffer_ptr extract_video_frames_from_video_at_url_(
 
   return frames_buffer;
 }
+
+GlobalInitializer init_all;
+
 } // namespace
 
 namespace codecs {
