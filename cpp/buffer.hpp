@@ -33,7 +33,16 @@ public:
   }
 
   int64_t size() const { return allocated_size_; }
-  const std::vector<ssize_t> &stride() const { return stride_; }
+
+  std::vector<ssize_t> stride() const {
+    std::vector<ssize_t> s(dims_.size());
+    s.back() = sizeof(uint8_t);
+    for (auto i = dims_.size() - 1; i > 0; --i) {
+      s[i - 1] = s[i] * dims_[i];
+    }
+    return s;
+  }
+
   const std::vector<ssize_t> &dims() const { return dims_; }
 
   uint8_t *data() const { return data_; }
@@ -55,18 +64,11 @@ private:
     allocated_size_ = std::accumulate(dims_.begin(), dims_.end(), 1,
                                       std::multiplies<ssize_t>()) *
                       sizeof(uint8_t);
-    
-    stride_.resize(dims_.size());
-    stride_.back() = sizeof(uint8_t);
-    for (auto i = dims_.size() - 1; i > 0; --i) {
-      stride_[i - 1] = stride_[i] * dims_[i];
-    }
 
     data_ = new uint8_t[allocated_size_];
   }
 
   std::vector<ssize_t> dims_;
-  std::vector<ssize_t> stride_;
   uint8_t *data_ = nullptr;
   ssize_t allocated_size_ = 0;
 };
