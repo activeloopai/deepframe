@@ -9,39 +9,39 @@ namespace py = pybind11;
 
 namespace {
 
-std::vector<int64_t> slice_to_indexes(const py::slice &s, int64_t max_size) {
-  ssize_t start = 0, stop = 0, step = 0, slicelength = 0;
-  if (!s.compute(max_size, &start, &stop, &step, &slicelength)) {
-    throw py::error_already_set();
-  }
-  std::vector<int64_t> indices;
-  indices.reserve(slicelength);
-  for (ssize_t i = start; i < stop; i += step) {
-    indices.push_back(i);
-  }
-  return indices;
+std::vector<int64_t> slice_to_indexes(const py::slice& s, int64_t max_size)
+{
+    ssize_t start = 0, stop = 0, step = 0, slicelength = 0;
+    if (!s.compute(max_size, &start, &stop, &step, &slicelength)) {
+        throw py::error_already_set();
+    }
+    std::vector<int64_t> indices;
+    indices.reserve(slicelength);
+    for (ssize_t i = start; i < stop; i += step) {
+        indices.push_back(i);
+    }
+    return indices;
 }
 
 std::vector<int64_t>
-compute_indexes(const std::variant<int64_t, pybind11::slice, pybind11::list,
-                                   pybind11::tuple> &index,
-                int64_t max_size) {
-  return std::visit(
-      [max_size]<typename T>(const T &val) -> std::vector<int64_t> {
-        if constexpr (std::is_same_v<T, int64_t>) {
-          return {val};
-        } else if constexpr (std::is_same_v<T, pybind11::slice>) {
-          return slice_to_indexes(val, max_size);
-        } else {
-          std::vector<int64_t> indices;
-          indices.reserve(val.size());
-          for (auto &i : val) {
-            indices.push_back(pybind11::cast<int64_t>(i));
-          }
-          return indices;
-        }
-      },
-      index);
+compute_indexes(const std::variant<int64_t, pybind11::slice, pybind11::list, pybind11::tuple>& index, int64_t max_size)
+{
+    return std::visit(
+        [max_size]<typename T>(const T& val) -> std::vector<int64_t> {
+            if constexpr (std::is_same_v<T, int64_t>) {
+                return {val};
+            } else if constexpr (std::is_same_v<T, pybind11::slice>) {
+                return slice_to_indexes(val, max_size);
+            } else {
+                std::vector<int64_t> indices;
+                indices.reserve(val.size());
+                for (auto& i : val) {
+                    indices.push_back(pybind11::cast<int64_t>(i));
+                }
+                return indices;
+            }
+        },
+        index);
 }
 
 } // namespace

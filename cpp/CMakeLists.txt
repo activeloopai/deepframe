@@ -21,14 +21,14 @@ execute_process(
 
 set(pybind11_DIR ${PYBIND11_CMAKE_DIR} CACHE PATH "Path to pybind11 CMake files")
 
-find_package(pybind11 REQUIRED)
+find_package(pybind11 REQUIRED CONFIG HINTS ${PYBIND11_CMAKE_DIR})
 
 find_package(OpenSSL REQUIRED)
 
 # Add Python module
 pybind11_add_module(pyvframe python_bindings.cpp)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/FindFFmpeg.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/findFFmpeg.cmake)
 if (TARGET ffmpeg_ep)
     add_dependencies(pyvframe ffmpeg_ep)
 endif()
