@@ -1,4 +1,18 @@
+# PyVFrame
+
 Python module to extract frames from a video file.
+
+# API
+
+Package provides a simple API to get video frames from a video file. The frames are returned as numpy arrays.
+
+```python
+import pyvframe
+
+frames = pyvframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
+```
+
+# C++ Build
 
 ## Requirements
 

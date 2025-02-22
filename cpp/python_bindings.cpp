@@ -46,39 +46,39 @@ compute_indexes(const std::variant<int64_t, pybind11::slice, pybind11::list, pyb
 
 } // namespace
 
-PYBIND11_MODULE(pyvframe, m) {
-  py::class_<core::buffer, std::shared_ptr<core::buffer>>(m, "Buffer",
-                                                          py::buffer_protocol())
-      .def_buffer([](core::buffer &buf) -> py::buffer_info {
-        auto dims = buf.dims();
-        auto stride = buf.stride();
-        return py::buffer_info(
-            buf.data(),                               /* Pointer to buffer */
-            sizeof(uint8_t),                          /* Size of one scalar */
-            py::format_descriptor<uint8_t>::format(), /* Python struct-style
-                                                         format descriptor */
-            dims.size(),                              /* Number of dimensions */
-            dims,                                     /* Buffer dimensions */
-            stride, /* Strides (in bytes) for each index */
-            true    /* Buffer is read-only */
-        );
-      });
+PYBIND11_MODULE(pyvframe, m)
+{
+    py::class_<core::buffer, std::shared_ptr<core::buffer>>(m, "Buffer", py::buffer_protocol())
+        .def_buffer([](core::buffer& buf) -> py::buffer_info {
+            auto dims = buf.dims();
+            auto stride = buf.stride();
+            return py::buffer_info(buf.data(),                               /* Pointer to buffer */
+                                   sizeof(uint8_t),                          /* Size of one scalar */
+                                   py::format_descriptor<uint8_t>::format(), /* Python struct-style
+                                                                                format descriptor */
+                                   dims.size(),                              /* Number of dimensions */
+                                   dims,                                     /* Buffer dimensions */
+                                   stride,                                   /* Strides (in bytes) for each index */
+                                   true                                      /* Buffer is read-only */
+            );
+        });
 
-  m.def(
-      "extract_video_frames_from_video_at_url",
-      [](const std::string &url,
-         std::variant<int64_t, py::slice, py::list, py::tuple> &index,
-         int64_t max_size = std::numeric_limits<int64_t>::max()) {
-        auto indices = compute_indexes(index, max_size);
-        return codecs::extract_video_frames_from_video_at_url(url, indices);
-      },
-      py::arg("url"), py::arg("index"),
-      py::arg("max_size") = std::numeric_limits<int64_t>::max());
+    m.def(
+        "extract_video_frames_from_video_at_url",
+        [](const std::string& url,
+           std::variant<int64_t, py::slice, py::list, py::tuple>& index,
+           int64_t max_size = std::numeric_limits<int64_t>::max()) {
+            auto indices = compute_indexes(index, max_size);
+            return codecs::extract_video_frames_from_video_at_url(url, indices);
+        },
+        py::arg("url"),
+        py::arg("index"),
+        py::arg("max_size") = std::numeric_limits<int64_t>::max());
 
-  m.def(
-      "get_video_info",
-      [](const std::string &url) {
-        return codecs::get_video_info(url);
-      },
-      py::arg("url"));
+    m.def(
+        "get_video_info",
+        [](const std::string& url) {
+            return codecs::get_video_info(url);
+        },
+        py::arg("url"));
 }
