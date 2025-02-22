@@ -1,6 +1,11 @@
 #include "video.hpp"
 
 #include <algorithm>
+#include <cstring>
+#include <iostream>
+#include <map>
+#include <vector>
+
 #include <openssl/ssl.h>
 
 extern "C" {

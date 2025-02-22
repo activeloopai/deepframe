@@ -1,7 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
+#include <memory>
 #include <numeric>
+#include <string>
 #include <vector>
 
 namespace core {
