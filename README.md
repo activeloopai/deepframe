@@ -4,12 +4,14 @@ Python module to extract frames from a video file.
 
 # API
 
-Package provides a simple API to get video frames from a video file. The frames are returned as numpy arrays.
+Package provides a simple API to get video frames from a video file. The frames are returned as [buffer view](https://docs.python.org/3/c-api/buffer.html) objects which can be converted to numpy arrays.
 
 ```python
 import pyvframe
+import numpy as np
 
-frames = pyvframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
+buffer_view = pyvframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
+frames = np.asarray(buffer_view)
 ```
 
 # C++ Build
