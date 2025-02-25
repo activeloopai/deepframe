@@ -111,6 +111,11 @@ macro(ensure_ffmpeg)
     list(APPEND FFMPEG_LIBRARIES_LIST ${ffmpeg_INSTALL_DIR}/lib/libswresample${CMAKE_STATIC_LIBRARY_SUFFIX})
     list(APPEND FFMPEG_LIBRARIES_LIST ${ffmpeg_INSTALL_DIR}/lib/libswscale${CMAKE_STATIC_LIBRARY_SUFFIX})
 
+    find_package(LibLZMA REQUIRED)
+    list(APPEND FFMPEG_LIBRARIES_LIST LibLZMA::LibLZMA)
+
+    find_package(Iconv REQUIRED)
+    list(APPEND FFMPEG_LIBRARIES_LIST Iconv::Iconv)
 
     #TODO come up with proper solution here
     add_library(FFmpeg::FFmpeg INTERFACE IMPORTED GLOBAL)
