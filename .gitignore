@@ -43,3 +43,4 @@ pyvframe/
 __pycache__/
 dist/
 *.egg-info/
+MANIFEST.in
