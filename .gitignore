@@ -36,8 +36,10 @@
 
 # build
 build/
-install/
+pyvframe/
 
 .ext/
 .pytest_cache/
 __pycache__/
+dist/
+*.egg-info/
