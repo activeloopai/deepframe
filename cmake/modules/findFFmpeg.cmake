@@ -82,7 +82,6 @@ macro(build_ffmpeg_once)
                     --enable-swscale 
                     --enable-pic
                     --disable-asm
-                    --disable-openssl
                     --disable-debug
                     --disable-programs
                     --disable-libdrm
