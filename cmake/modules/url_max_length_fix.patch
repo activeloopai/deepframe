@@ -1,0 +1,14 @@
+diff --git a/libavformat/internal.h b/libavformat/internal.h
+index 6c026f08a0..356d3c6609 100644
+--- a/libavformat/internal.h
++++ b/libavformat/internal.h
+@@ -27,7 +27,7 @@
+ 
+ #include "avformat.h"
+ 
+-#define MAX_URL_SIZE 4096
++#define MAX_URL_SIZE 8192
+ 
+ /** size of probe buffer, for guessing file type from file contents */
+ #define PROBE_BUF_MIN 2048
+ 

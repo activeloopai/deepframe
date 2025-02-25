@@ -90,7 +90,7 @@ macro(build_ffmpeg_once)
                     ${EXTRA_ARGUMENTS}
             BUILD_IN_SOURCE TRUE
             PATCH_COMMAND 
-                ${CMAKE_COMMAND} -E env PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} python ${DEFAULT_PARENT_DIR}/scripts/patch_ffmpeg.py ${ffmpeg_SOURCE_DIR}/libavformat/internal.h
+                patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
             BUILD_COMMAND $(MAKE)
             INSTALL_COMMAND $(MAKE) install
             DEPENDS ${FFMPEG_EP_DEPENDS}
