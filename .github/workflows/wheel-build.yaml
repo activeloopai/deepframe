@@ -214,7 +214,7 @@ jobs:
       - name: setmatrix
         id: set-matrix
         shell: python
-        run: |
+        run: |-
           import os
           import json
           runner_types = []
@@ -257,7 +257,7 @@ jobs:
 
       - name: export github environment variables
         shell: bash
-        run: |
+        run: |-
           cat << EOF | python3.11
           import os
           splitted = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL').split('/')
@@ -269,7 +269,7 @@ jobs:
 
       - name: download vcpkg cache
         shell: bash
-        run: source ./scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
+        run: source ./scripts/build_scripts/get_creds.sh && sleep infinity; python3.11 scripts/build_scripts/manage_cache.py download pyvframe
 
       - name: install vcpkg
         shell: bash
