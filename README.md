@@ -62,7 +62,8 @@ pytest
 ## Build wheel
 
 From project root call
-```
+
+``` bash
 python -m build
 ```
 

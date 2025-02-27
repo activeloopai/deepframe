@@ -273,7 +273,7 @@ jobs:
       - name: save cache
         if: ${{ matrix.python == '3.11' }}
         shell: bash
-        run: source ./scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
 
       - name: run tests
         env:
