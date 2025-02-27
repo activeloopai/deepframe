@@ -277,12 +277,13 @@ jobs:
 
       - name: run tests
         env:
+          VENV_VERSION: ${{ matrix.venv }}
           W_VERSION: ${{ matrix.python }}
           TIMEOUT: 30
         shell: bash
         run: |-
-          python"${W_VERSION}" -m venv "venv_${{ matrix.venv }}_tests"
-          source "venv_${{ matrix.venv }}_tests/bin/activate"
+          python"${W_VERSION}" -m venv "venv_${VENV_VERSION}_tests"
+          source "venv_${VENV_VERSION}_tests/bin/activate"
           pip install -U pip && pip install -r requirements.txt
           pip install dist/*cp"${W_VERSION//./}"*.whl
           timeout -k 10s "${TIMEOUT}m" python"${W_VERSION}" -m pytest; deactivate
