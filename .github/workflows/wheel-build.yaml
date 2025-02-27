@@ -251,7 +251,7 @@ jobs:
       VCPKG_BINARY_SOURCES: clear;files,/vcpkg-cache,readwrite
       BUILD_PRESET: debug
     steps:
-      - name: checkout
+      - name: clone repository
         shell: bash
         run: git clone -b "${{ github.ref_name }}" "https://activeloop-bot:${{ secrets.ORG_GH_BOT_PAT }}@github.com/${{ github.repository }}" .
 
@@ -270,7 +270,7 @@ jobs:
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
           python"${{ matrix.python }}" -m build
 
-      - name: save cache
+      - name: save vcpkg cache
         if: ${{ matrix.python == '3.11' }}
         shell: bash
         run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
@@ -287,3 +287,12 @@ jobs:
           # pip install -U pip && pip install -r requirements.txt
           # pip install dist/*cp"${W_VERSION//./}"*.whl
           # timeout -k 10s "${TIMEOUT}m" python"${W_VERSION}" -m pytest; deactivate
+
+      - name: upload wheels to s3
+        if: always()
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+          TYPE: ${{ matrix.type }}
+          PYTHON: ${{ matrix.python }}
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/upload_wheels.py pyvframe
