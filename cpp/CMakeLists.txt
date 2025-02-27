@@ -41,3 +41,8 @@ target_link_libraries(pyvframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg O
 
 # Installation
 install(TARGETS pyvframe DESTINATION ${CMAKE_INSTALL_PREFIX}/)
+
+add_custom_command(TARGET pyvframe POST_BUILD
+        COMMAND echo "include pyvframe/pyvframe${PYTHON_MODULE_EXTENSION}" > "${CMAKE_CURRENT_SOURCE_DIR}/../MANIFEST.in"
+        COMMENT "Created ${CMAKE_CURRENT_SOURCE_DIR}/../MANIFEST.in"
+    )

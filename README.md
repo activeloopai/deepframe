@@ -49,7 +49,7 @@ python scripts/build.py debug
 python scripts/build.py release
 ```
 
-After the build you can find the python package in `./build/{mode}` or the latest one is always available in `./install/` which is used to run the tests.
+After the build you can find the python package in `./build/{mode}` or the latest one is always available in `./pyvframe/` which is used to run the tests.
 
 ## Test
 
@@ -58,3 +58,12 @@ For testing we use `pytest`. To run all tests simply call from project root.
 ``` bash
 pytest
 ```
+
+## Build wheel
+
+From project root call
+```
+python -m build
+```
+
+Once the run finishes you will find the files under `./dist/` directory.
