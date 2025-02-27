@@ -223,7 +223,6 @@ jobs:
           if "${{ inputs.build_linux_amd }}" == "true":
             runner_types.append("x86_64")
           python_to_venv = {
-              '3.7' : ['7'],
               '3.8' : ['8'],
               '3.9' : ['9'],
               '3.10': ['10'],
