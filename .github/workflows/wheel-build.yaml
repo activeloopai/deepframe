@@ -249,7 +249,7 @@ jobs:
         include: ${{ fromJSON(needs.get_linux_matrix.outputs.matrix) }}
     env:
       VCPKG_BINARY_SOURCES: clear;files,/vcpkg-cache,readwrite
-      BUILD_PRESET: DEBUG
+      BUILD_PRESET: debug
     steps:
       - name: checkout
         shell: bash
