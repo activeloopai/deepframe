@@ -255,18 +255,6 @@ jobs:
         shell: bash
         run: git clone -b "${{ github.ref_name }}" "https://activeloop-bot:${{ secrets.ORG_GH_BOT_PAT }}@github.com/${{ github.repository }}" .
 
-      # - name: export github environment variables
-      #   shell: bash
-      #   run: |-
-      #     cat << EOF | python3.11
-      #     import os
-      #     splitted = os.environ.get('ACTIONS_ID_TOKEN_REQUEST_URL').split('/')
-      #     with open(os.environ.get('GITHUB_ENV'), 'a') as file:
-      #         file.write(f'ACTIONS_CACHE_URL=https://acghubeus2.actions.githubusercontent.com/{splitted[3]}/\n')
-      #         file.write(f'ACTIONS_RUNTIME_URL=https://{splitted[2]}/{splitted[3]}/\n')
-      #     EOF
-      #     echo ACTIONS_RUNTIME_TOKEN="${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" >> "${GITHUB_ENV}"
-
       - name: download vcpkg cache
         shell: bash
         run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
@@ -280,7 +268,7 @@ jobs:
         run: |-
           python"${{ matrix.python }}" -m pip install -r requirements.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
-          python"${{ matrix.python }}" -m build -w python
+          python"${{ matrix.python }}" -m build
 
       - name: save cache
         if: ${{ matrix.python == '3.11' }}
