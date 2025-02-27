@@ -241,7 +241,7 @@ jobs:
   build_wheels_linux:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
-    runs-on: indra-wheels-linux-${{ matrix.type }}-runner
+    runs-on: pyvframe-wheels-linux-${{ matrix.type }}-runner
     container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
     strategy:
       fail-fast: false
