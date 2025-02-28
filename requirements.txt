@@ -1,5 +1,6 @@
-pybind11
-numpy
-cmake
-pytest
 build
+cmake
+numpy
+pybind11
+pybind11-global
+pytest
