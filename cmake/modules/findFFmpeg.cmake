@@ -117,6 +117,9 @@ macro(ensure_ffmpeg)
     find_package(Iconv REQUIRED)
     list(APPEND FFMPEG_LIBRARIES_LIST Iconv::Iconv)
 
+    find_package(ZLIB REQUIRED)
+    list(APPEND FFMPEG_LIBRARIES_LIST ZLIB::ZLIB)
+
     #TODO come up with proper solution here
     add_library(FFmpeg::FFmpeg INTERFACE IMPORTED GLOBAL)
     #target_link_libraries(FFmpeg::FFmpeg INTERFACE
