@@ -4,6 +4,7 @@
     "dependencies": [
       "openssl",
       "liblzma",
-      "libiconv"
+      "libiconv",
+      "zlib"
     ]
   }
