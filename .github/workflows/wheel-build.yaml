@@ -255,9 +255,9 @@ jobs:
         shell: bash
         run: git clone -b "${{ github.ref_name }}" "https://activeloop-bot:${{ secrets.ORG_GH_BOT_PAT }}@github.com/${{ github.repository }}" .
 
-      # - name: download vcpkg cache
-      #   shell: bash
-      #   run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
+      - name: download vcpkg cache
+        shell: bash
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
 
       - name: install vcpkg
         shell: bash
