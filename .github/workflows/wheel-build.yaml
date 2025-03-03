@@ -34,175 +34,111 @@ on:
           - "macos-15"
         default: "self-hosted"
 
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ inputs.build_linux }}-${{ inputs.build_mac }}
-#   cancel-in-progress: true
-
 env:
   VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
   VCPKG_FEATURE_FLAGS: "dependencygraph"
   VCPKG_DISABLE_METRICS: true
 
 jobs:
-  # get_macos_matrix:
-  #   if: inputs.build_mac_amd || inputs.build_mac_arm
-  #   runs-on: ubuntu-latest
-  #   name: set macos build matrix
-  #   outputs:
-  #     matrix: ${{ steps.set-matrix.outputs.matrix }}
-  #   steps:
-  #     - name: setmatrix
-  #       id: set-matrix
-  #       shell: python
-  #       run: |
-  #         import os
-  #         import json
-  #         runner_types = []
-  #         if "${{ inputs.build_mac_amd }}" == "true":
-  #           runner_types.append("large")
-  #         if "${{ inputs.build_mac_arm }}" == "true":
-  #           runner_types.append("xlarge")
-  #         python_to_venv = {
-  #             '3.8' : ['8'],
-  #             '3.9' : ['9'],
-  #             '3.10': ['10'],
-  #             '3.11': ['11'],
-  #             '3.12': ['12'],
-  #             '3.13': ['13']
-  #         }
-  #         matrix = [{"python": py, "venv": venv, "type": type}
-  #                   for py, venvs in python_to_venv.items()
-  #                   for venv in venvs
-  #                   for type in runner_types]
-  #         with open(os.environ.get("GITHUB_OUTPUT"), "a") as file:
-  #           file.write(f"matrix={json.dumps(matrix)}\n")
-  #         print(f"[INFO] matrix={json.dumps(matrix)}\n")
+  get_macos_matrix:
+    name: Set MacOS Build Matrix
+    if: ${{ inputs.build_mac_amd || inputs.build_mac_arm }}
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: set matrix
+        id: set-matrix
+        shell: python
+        run: |-
+          import os
+          import json
+          runner_types = []
+          if "${{ inputs.build_mac_amd }}" == "true":
+            runner_types.append("large")
+          if "${{ inputs.build_mac_arm }}" == "true":
+            runner_types.append("xlarge")
+          python_to_venv = {
+              '3.8' : ['8'],
+              '3.9' : ['9'],
+              '3.10': ['10'],
+              '3.11': ['11'],
+              '3.12': ['12'],
+              '3.13': ['13']
+          }
+          matrix = [{"python": py, "venv": venv, "type": type}
+                    for py, venvs in python_to_venv.items()
+                    for venv in venvs
+                    for type in runner_types]
+          with open(os.environ.get("GITHUB_OUTPUT"), "a") as file:
+            file.write(f"matrix={json.dumps(matrix)}\n")
+          print(f"[INFO] matrix={json.dumps(matrix)}\n")
 
-  # build_wheels-macos:
-  #   needs: get_macos_matrix
-  #   name: MacOS Wheels
-  #   runs-on: ${{ inputs.runner }}-${{ matrix.type }}
-  #   env:
-  #     VCPKG_BINARY_SOURCES: clear;files,/Users/sre/GitHub/vcpkg-cache-${{ matrix.type }},readwrite
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
-  #   steps:
-  #   #   - name: set platform name
-  #   #     id: platform-name
-  #   #     shell: bash
-  #   #     env:
-  #   #       TYPE: ${{ matrix.type }}
-  #   #     run: |
-  #   #       case "${TYPE}" in
-  #   #         xlarge)
-  #   #           echo "platform=${{ vars.MACOS_ARM_PLATFORM }}" >> $GITHUB_OUTPUT
-  #   #           echo "arch=arm64" >> $GITHUB_OUTPUT
-  #   #         ;;
-  #   #         large)
-  #   #           echo "platform=${{ vars.MACOS_AMD_PLATFORM }}" >> $GITHUB_OUTPUT
-  #   #           echo "arch=x86_64" >> $GITHUB_OUTPUT
-  #   #         ;;
-  #   #       esac
+  build_wheels-macos:
+    name: MacOS Wheels Build
+    needs: [get_macos_matrix]
+    runs-on: ${{ inputs.runner }}-${{ matrix.type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-${{ matrix.type }},readwrite"
+      BUILD_PRESET: "debug"
+    steps:
+      - name: clone repository
+        uses: actions/checkout@v4.2.2
 
-  #     - name: checkout
-  #       uses: actions/checkout@v4.2.2
+      - name: setup python ${{ matrix.python }}
+        if: ${{ inputs.runner != 'self-hosted' }}
+        uses: actions/setup-python@v5.4.0
+        with:
+          python-version: ${{ matrix.python }}
 
-  #     - name: setup python ${{ matrix.python }}
-  #       if: inputs.runner != 'self-hosted'
-  #       uses: actions/setup-python@v5.4.0
-  #       with:
-  #         python-version: ${{ matrix.python }}
+      - name: setup python ${{ matrix.python }} environment
+        id: setup
+        shell: bash
+        run: |-
+          python${{ matrix.python }} -m venv "venv_${{ matrix.venv }}"
+          source "venv_${{ matrix.venv }}/bin/activate"
+          python"${{ matrix.python }}" -m pip install -qqq -U setuptools build; deactivate
 
-  #     - name: setup python ${{ matrix.python }} environment
-  #       id: setup
-  #       shell: bash
-  #       run: |-
-  #         python${{ matrix.python }} -m venv "venv_${{ matrix.venv }}"
-  #         . "venv_${{ matrix.venv }}/bin/activate"
-  #         python${{ matrix.python }} -m pip install -qqq -U setuptools build
-  #         deactivate
+      - name: install bison
+        if: ${{ inputs.runner != 'self-hosted' }}
+        shell: bash
+        run: |-
+          if ! (bison --version); then
+            brew install bison
+            BISON_PREFIX=$(brew --prefix bison)
+            echo "Bison prefix is $BISON_PREFIX"
+            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> "${GITHUB_ENV}"
+            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> "${HOME}"/.bash_profile
+            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> "${HOME}"/.zshrc
+          fi
 
-  #     - name: install bison
-  #       run: |
-  #         if ! (bison --version); then
-  #           brew install bison
-  #           BISON_PREFIX=$(brew --prefix bison)
-  #           echo "Bison prefix is $BISON_PREFIX"
-  #           echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $GITHUB_ENV
-  #           echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $HOME/.bash_profile
-  #           echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $HOME/.zshrc
-  #         fi
+      - name: install vcpkg
+        shell: bash
+        run: git clone https://github.com/microsoft/vcpkg.git && ./vcpkg/bootstrap-vcpkg.sh
 
-  #     - name: build (py${{ matrix.python }})
-  #       env:
-  #         CMAKE_OSX_ARCHITECTURES: ${{ steps.platform-name.outputs.arch }}
-  #       run: |
-  #         git clone https://github.com/microsoft/vcpkg.git
-  #         ./vcpkg/bootstrap-vcpkg.sh
-  #         echo -e "\033[33mBuilding Binary\033[00m"
-  #         . "venv_${{ matrix.venv }}/bin/activate"
-  #         export PATH="/opt/brew/opt/bison/bin:$PATH"
-  #         python${{ matrix.python }} scripts/build_python.py prod
-  #         cp builds/python-prod/*.so.dSYM/Contents/Resources/DWARF/*.so __sentry__/
-  #         echo -e "\033[33mBuilding Wheel\033[00m"
-  #         python${{ matrix.python }} -m build -w python
-  #         deactivate
-  #         rm -rf python/deeplake/*.so builds/python-prod/*/_deeplake.*.so builds/python-prod/*/_deeplake.*.so.debug builds/python-prod/*/*.so.dSYM builds/python-prod/*/CMakeFiles/_deeplake.dir/deeplake_api_py/
+      - name: build py${{ matrix.python }}
+        shell: bash
+        run: |-
+          source "venv_${{ matrix.venv }}/bin/activate"
+          python"${{ matrix.python }}" -m pip install -r requirements.txt &&
+          python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
+          python"${{ matrix.python }}" -m build; deactivate
 
-  #     - name: configure aws credentials
-  #       if: matrix.python == '3.11' && matrix.type == 'xlarge'
-  #       uses: aws-actions/configure-aws-credentials@v4.0.2
-  #       with:
-  #         role-to-assume: arn:aws:iam::067976305224:role/github
-  #         aws-region: us-east-1
+      - name: run tests
+        shell: bash
+        run: |-
+          source "venv_${{ matrix.venv }}/bin/activate"
+          timeout -k 10s 30m python"${{ matrix.python }}" -m pytest; deactivate
 
-  #     - name: download test datasets
-  #       if: matrix.python == '3.11' && matrix.type == 'xlarge'
-  #       env:
-  #         BUCKET: ${{ vars.TEST_DATASETS_BUCKET_PATH }}
-  #       shell: bash
-  #       run: |
-  #         aws s3 cp --quiet --recursive s3://$BUCKET ./test_datasets/
-
-  #     - name: set google credentials
-  #       if: matrix.python == '3.11' && matrix.type == 'xlarge'
-  #       shell: bash
-  #       run: |
-  #         echo "${{ secrets.GOOGLE_CREDENTIALS }}" | base64 --decode > /tmp/google_creds.json
-  #         chmod +x /tmp/google_creds.json
-
-  #     - name: run tests
-  #       if: matrix.python == '3.11' && matrix.type == 'xlarge'
-  #       shell: bash
-  #       env:
-  #         ACTIVELOOP_HUB_USERNAME: ${{ secrets.ACTIVELOOP_PLATFORM_USER }}
-  #         ACTIVELOOP_TOKEN: ${{ secrets.ACTIVELOOP_PLATFORM_TOKEN }}
-  #         TIMEOUT: "30"
-  #         AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  #         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #         GOOGLE_APPLICATION_CREDENTIALS: '/tmp/google_creds.json'
-  #         BUGGER_OFF: 'true'
-  #         VIZ_TEST_DATASETS_PATH: '../test_datasets'
-  #       run: |
-  #         w_version="${{ matrix.python }}"
-  #         python${w_version} -m venv "venv_${{ matrix.venv }}_tests"
-  #         source "venv_${{ matrix.venv }}_tests/bin/activate"
-  #         cd python && echo -e "\n\033[33;01m Installing test dependencies \033[00m\n"
-  #         pip install -U pip setuptools
-  #         pip install dist/*cp${w_version//./}*.whl
-  #         pip install -r requirements-tests.txt
-  #         echo -e "\n\033[33;01m Running the tests \033[00m\n"
-  #         timeout -k 10s "${TIMEOUT}m" python -m pytest tests --cloud; deactivate
-  #         rm -rf ../test_datasets || true
-
-  #     - uses: actions/upload-artifact@v4.4.3
-  #       if: always()
-  #       with:
-  #         name: deeplake-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels-v4
-  #         path: python/dist/*.whl
+      - uses: actions/upload-artifact@v4.6.1
+        if: always()
+        with:
+          name: "pyvframe-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels"
+          path: "dist/*.whl"
 
   get_linux_matrix:
     name: Set Linux Build Matrix
