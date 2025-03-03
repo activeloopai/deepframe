@@ -39,6 +39,12 @@ target_include_directories(pyvframe PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_sources(pyvframe PRIVATE video.cpp)
 target_link_libraries(pyvframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg OpenSSL::SSL OpenSSL::Crypto)
 
+# Remove all pyvframe.* files
+file(GLOB pyvframe_files "${CMAKE_INSTALL_PREFIX}/pyvframe.*")
+if (pyvframe_files)
+    file(REMOVE ${pyvframe_files})
+endif()
+
 # Installation
 install(TARGETS pyvframe DESTINATION ${CMAKE_INSTALL_PREFIX}/)
 
