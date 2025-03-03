@@ -4,4 +4,3 @@ numpy
 pybind11
 pybind11-global
 pytest
-build
