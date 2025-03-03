@@ -67,7 +67,7 @@ jobs:
         run: |-
           python${{ matrix.python }} -m venv "venv_${{ matrix.venv }}"
           source "venv_${{ matrix.venv }}/bin/activate"
-          python"${{ matrix.python }}" -m pip install -qqq -U setuptools build; deactivate
+          python"${{ matrix.python }}" -m pip install -qqq -U pip setuptools build; deactivate
 
       - name: install vcpkg
         shell: bash
