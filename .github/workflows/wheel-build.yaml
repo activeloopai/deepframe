@@ -83,7 +83,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-${{ matrix.type }},readwrite"
+      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-pyvframe-${{ matrix.type }},readwrite"
       BUILD_PRESET: "debug"
     steps:
       - name: clone repository
