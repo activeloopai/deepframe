@@ -276,17 +276,8 @@ jobs:
         run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
 
       - name: run tests
-        env:
-          VENV_VERSION: ${{ matrix.venv }}
-          W_VERSION: ${{ matrix.python }}
-          TIMEOUT: 30
         shell: bash
-        run: timeout -k 10s "${TIMEOUT}m" python"${W_VERSION}" -m pytest
-          # python"${W_VERSION}" -m venv "venv_${VENV_VERSION}_tests"
-          # source "venv_${VENV_VERSION}_tests/bin/activate"
-          # pip install -U pip && pip install -r requirements.txt
-          # pip install dist/*cp"${W_VERSION//./}"*.whl
-          # timeout -k 10s "${TIMEOUT}m" python"${W_VERSION}" -m pytest; deactivate
+        run: timeout -k 10s 30m python"${{ matrix.python }}" -m pytest
 
       - name: upload wheels to s3
         if: always()
