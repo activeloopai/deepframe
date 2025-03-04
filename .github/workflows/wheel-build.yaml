@@ -1,0 +1,174 @@
+name: PyVFrame Wheels Build
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
+  VCPKG_FEATURE_FLAGS: "dependencygraph"
+  VCPKG_DISABLE_METRICS: true
+  BUILD_PRESET: "release"
+
+jobs:
+  get_macos_matrix:
+    name: Set MacOS Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: set matrix
+        id: set-matrix
+        shell: python
+        run: |-
+          import os
+          import json
+          runner_types = []
+          runner_types.append("large")
+          runner_types.append("xlarge")
+          python_to_venv = {
+              '3.8' : ['8'],
+              '3.9' : ['9'],
+              '3.10': ['10'],
+              '3.11': ['11'],
+              '3.12': ['12'],
+              '3.13': ['13']
+          }
+          matrix = [{"python": py, "venv": venv, "type": type}
+                    for py, venvs in python_to_venv.items()
+                    for venv in venvs
+                    for type in runner_types]
+          with open(os.environ.get("GITHUB_OUTPUT"), "a") as file:
+            file.write(f"matrix={json.dumps(matrix)}\n")
+          print(f"[INFO] matrix={json.dumps(matrix)}\n")
+
+  build_wheels-macos:
+    name: MacOS Wheels Build
+    needs: [get_macos_matrix]
+    runs-on: self-hosted-${{ matrix.type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-pyvframe-${{ matrix.type }},readwrite"
+    steps:
+      - name: clone repository
+        uses: actions/checkout@v4.2.2
+
+      - name: setup python ${{ matrix.python }} environment
+        id: setup
+        shell: bash
+        run: |-
+          python${{ matrix.python }} -m venv "venv_${{ matrix.venv }}"
+          source "venv_${{ matrix.venv }}/bin/activate"
+          python"${{ matrix.python }}" -m pip install -qqq -U pip setuptools build; deactivate
+
+      - name: install vcpkg
+        shell: bash
+        run: git clone https://github.com/microsoft/vcpkg.git && ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: build py${{ matrix.python }}
+        shell: bash
+        run: |-
+          source "venv_${{ matrix.venv }}/bin/activate"
+          python"${{ matrix.python }}" -m pip install -r requirements.txt &&
+          python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
+          python"${{ matrix.python }}" -m build; deactivate
+
+      - name: run tests
+        shell: bash
+        run: |-
+          source "venv_${{ matrix.venv }}/bin/activate"
+          timeout -k 10s 30m python"${{ matrix.python }}" -m pytest; deactivate
+
+      - uses: actions/upload-artifact@v4.6.1
+        if: ${{ always() }}
+        with:
+          name: "pyvframe-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels"
+          path: "dist/*.whl"
+
+  get_linux_matrix:
+    name: Set Linux Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: set matrix
+        id: set-matrix
+        shell: python
+        run: |-
+          import os
+          import json
+          runner_types = []
+          runner_types.append("x86_64")
+          runner_types.append("aarch64")
+          python_to_venv = {
+              '3.8' : ['8'],
+              '3.9' : ['9'],
+              '3.10': ['10'],
+              '3.11': ['11'],
+              '3.12': ['12'],
+              '3.13': ['13']
+          }
+          matrix = [{"python": py, "venv": venv, "type": type}
+                    for py, venvs in python_to_venv.items()
+                    for venv in venvs
+                    for type in runner_types]
+          with open(os.environ.get("GITHUB_OUTPUT"), "a") as file:
+            file.write(f"matrix={json.dumps(matrix)}\n")
+          print(f"[INFO] matrix={json.dumps(matrix)}\n")
+
+  build_wheels_linux:
+    name: Linux Wheels Build
+    needs: [get_linux_matrix]
+    runs-on: pyvframe-wheels-${{ matrix.type }}-builder
+    container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.get_linux_matrix.outputs.matrix) }}
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,/vcpkg-cache,readwrite"
+    steps:
+      - name: clone repository
+        shell: bash
+        run: git clone -b "${{ github.ref_name }}" "https://activeloop-bot:${{ secrets.ORG_GH_BOT_PAT }}@github.com/${{ github.repository }}" .
+
+      - name: download vcpkg cache
+        shell: bash
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
+
+      - name: install vcpkg
+        shell: bash
+        run: git clone https://github.com/microsoft/vcpkg.git && ./vcpkg/bootstrap-vcpkg.sh
+
+      - name: build py${{ matrix.python }}
+        shell: bash
+        run: |-
+          python"${{ matrix.python }}" -m pip install -r requirements.txt &&
+          python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
+          python"${{ matrix.python }}" -m build
+
+      - name: save vcpkg cache
+        if: ${{ matrix.python == '3.11' }}
+        shell: bash
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
+
+      - name: run tests
+        shell: bash
+        run: timeout -k 10s 30m python"${{ matrix.python }}" -m pytest
+
+      - name: upload wheels to s3
+        if: ${{ always() }}
+        env:
+          RUN_ID: ${{ github.run_id }}
+          TYPE: ${{ matrix.type }}
+          PYTHON: ${{ matrix.python }}
+        shell: bash
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/upload_wheels.py pyvframe

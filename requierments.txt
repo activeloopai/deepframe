@@ -1,5 +1,0 @@
-pybind11
-numpy
-cmake
-pytest
-build
