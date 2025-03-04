@@ -7,7 +7,7 @@ permissions:
 on:
   push:
     tags:
-      - "test-v*"
+      - "v*"
 
 env:
   VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
