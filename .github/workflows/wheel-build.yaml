@@ -5,9 +5,24 @@ permissions:
   id-token: write
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      build_mac_amd:
+        description: "Build MacOS x86_64 Wheels"
+        type: boolean
+        default: true
+      build_mac_arm:
+        description: "Build MacOS ARM Wheels"
+        type: boolean
+        default: true
+      build_linux_amd:
+        description: "Build Linux x86_64 Wheels"
+        type: boolean
+        default: true
+      build_linux_arm:
+        description: "Build Linux ARM Wheels"
+        type: boolean
+        default: true
 
 env:
   VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
@@ -18,6 +33,7 @@ env:
 jobs:
   get_macos_matrix:
     name: Set MacOS Build Matrix
+    if: ${{ inputs.build_mac_amd || inputs.build_mac_arm }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -29,8 +45,10 @@ jobs:
           import os
           import json
           runner_types = []
-          runner_types.append("large")
-          runner_types.append("xlarge")
+          if "${{ inputs.build_mac_amd }}" == "true":
+            runner_types.append("large")
+          if "${{ inputs.build_mac_arm }}" == "true":
+            runner_types.append("xlarge")
           python_to_venv = {
               '3.8' : ['8'],
               '3.9' : ['9'],
@@ -95,6 +113,7 @@ jobs:
 
   get_linux_matrix:
     name: Set Linux Build Matrix
+    if: ${{ inputs.build_linux_arm || inputs.build_linux_amd }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -106,8 +125,10 @@ jobs:
           import os
           import json
           runner_types = []
-          runner_types.append("x86_64")
-          runner_types.append("aarch64")
+          if "${{ inputs.build_linux_amd }}" == "true":
+            runner_types.append("x86_64")
+          if "${{ inputs.build_linux_arm }}" == "true":
+            runner_types.append("aarch64")
           python_to_venv = {
               '3.8' : ['8'],
               '3.9' : ['9'],
