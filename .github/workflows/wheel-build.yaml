@@ -7,20 +7,20 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      build_mac_arm:
-        description: "Build MacOS ARM Wheels"
-        type: boolean
-        default: true
       build_mac_amd:
         description: "Build MacOS x86_64 Wheels"
         type: boolean
         default: true
-      build_linux_arm:
-        description: "Build Linux ARM Wheels"
+      build_mac_arm:
+        description: "Build MacOS ARM Wheels"
         type: boolean
         default: true
       build_linux_amd:
         description: "Build Linux x86_64 Wheels"
+        type: boolean
+        default: true
+      build_linux_arm:
+        description: "Build Linux ARM Wheels"
         type: boolean
         default: true
 
