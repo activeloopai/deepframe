@@ -181,6 +181,10 @@ jobs:
         shell: bash
         run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
 
+      - name: debug
+        shell: bash
+        run: sleep infinity
+
       - name: run tests
         shell: bash
         run: timeout -k 10s 30m python"${{ matrix.python }}" -m pytest
