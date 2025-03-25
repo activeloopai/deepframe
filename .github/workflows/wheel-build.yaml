@@ -23,16 +23,6 @@ on:
         description: "Build Linux x86_64 Wheels"
         type: boolean
         default: true
-      runner:
-        description: Choose MacOS Action Runner Type
-        type: choice
-        options:
-          - "self-hosted"
-          - "macos-12"
-          - "macos-13"
-          - "macos-14"
-          - "macos-15"
-        default: "self-hosted"
 
 env:
   VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
