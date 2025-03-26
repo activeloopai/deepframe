@@ -89,7 +89,8 @@ jobs:
 
       - name: install vcpkg
         shell: bash
-        run: git clone https://github.com/microsoft/vcpkg.git && ./vcpkg/bootstrap-vcpkg.sh
+        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 1de2026f28ead93ff1773e6e680387643e914ea1 && ./bootstrap-vcpkg.sh
+
 
       - name: build py${{ matrix.python }}
         shell: bash
@@ -167,7 +168,7 @@ jobs:
 
       - name: install vcpkg
         shell: bash
-        run: git clone https://github.com/microsoft/vcpkg.git && ./vcpkg/bootstrap-vcpkg.sh
+        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 1de2026f28ead93ff1773e6e680387643e914ea1 && ./bootstrap-vcpkg.sh
 
       - name: build py${{ matrix.python }}
         shell: bash
