@@ -125,8 +125,10 @@ jobs:
           import json
           runner_types = []
           if "${{ inputs.build_linux_amd }}" == "true":
+            runner.append("ubuntu-24.04")
             runner_types.append("x86_64")
           if "${{ inputs.build_linux_arm }}" == "true":
+            runner.append("ubuntu-24.04-arm")
             runner_types.append("aarch64")
           python_to_venv = {
               '3.9' : ['9'],
@@ -138,6 +140,7 @@ jobs:
           matrix = [{"python": py, "venv": venv, "type": type}
                     for py, venvs in python_to_venv.items()
                     for venv in venvs
+                    for runner in runner
                     for type in runner_types]
           with open(os.environ.get("GITHUB_OUTPUT"), "a") as file:
             file.write(f"matrix={json.dumps(matrix)}\n")
@@ -146,7 +149,7 @@ jobs:
   build_wheels_linux:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
-    runs-on: ubuntu-latest-arm
+    runs-on: ${{ matrix.runner }}
     container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
     strategy:
       fail-fast: false
