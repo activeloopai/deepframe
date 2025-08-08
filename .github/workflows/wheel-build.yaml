@@ -138,7 +138,7 @@ jobs:
               '3.12': ['12'],
               '3.13': ['13']
           }
-          matrix = [{"python": py, "venv": venv, "type": type}
+          matrix = [{"python": py, "venv": venv, "runner": runner, "type": type}
                     for py, venvs in python_to_venv.items()
                     for venv in venvs
                     for runner in runners
