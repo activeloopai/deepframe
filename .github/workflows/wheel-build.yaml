@@ -123,6 +123,7 @@ jobs:
         run: |-
           import os
           import json
+          runners = []
           runner_types = []
           if "${{ inputs.build_linux_amd }}" == "true":
             runners.append("ubuntu-24.04")
