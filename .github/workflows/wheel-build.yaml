@@ -1,4 +1,4 @@
-name: PyVFrame Wheels Build
+name: DeepFrame Wheels Build
 
 permissions:
   contents: read
