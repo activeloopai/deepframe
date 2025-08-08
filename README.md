@@ -1,4 +1,4 @@
-# PyVFrame
+# DeepFrame
 
 Python module to extract frames from a video file.
 
