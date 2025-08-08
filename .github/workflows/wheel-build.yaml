@@ -50,7 +50,6 @@ jobs:
           if "${{ inputs.build_mac_arm }}" == "true":
             runner_types.append("xlarge")
           python_to_venv = {
-              '3.8' : ['8'],
               '3.9' : ['9'],
               '3.10': ['10'],
               '3.11': ['11'],
@@ -130,7 +129,6 @@ jobs:
           if "${{ inputs.build_linux_arm }}" == "true":
             runner_types.append("aarch64")
           python_to_venv = {
-              '3.8' : ['8'],
               '3.9' : ['9'],
               '3.10': ['10'],
               '3.11': ['11'],
