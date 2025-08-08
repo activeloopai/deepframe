@@ -8,9 +8,9 @@ RUN_ID = os.environ.get("RUN_ID")
 RUNNER_TYPE = os.environ.get("TYPE")
 PYTHON = os.environ.get("PYTHON")
 
-KEY = "indra/pyvframe"
+KEY = "indra/deepframe"
 
-if sys.argv[1] == "pyvframe":
+if sys.argv[1] == "deepframe":
     W_PATH = f"dist/centos_wheels_{RUN_ID}_{RUNNER_TYPE}_{PYTHON}.zip"
     os.system(f"cd dist; zip centos_wheels_{RUN_ID}_{RUNNER_TYPE}_{PYTHON}.zip *.whl")
 else:

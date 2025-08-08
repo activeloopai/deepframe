@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 from setuptools.dist import Distribution
 
-project_name = "pyvframe"
+project_name = "deepframe"
 
 
 class BinaryDistribution(Distribution):
@@ -12,7 +12,7 @@ class BinaryDistribution(Distribution):
         return True
 
 
-init_file = os.path.join("pyvframe", "__init__.py")
+init_file = os.path.join("deepframe", "__init__.py")
 
 
 def get_property(prop):

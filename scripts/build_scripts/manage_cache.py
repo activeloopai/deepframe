@@ -39,7 +39,7 @@ else:
     print(f"unsupported architecture: {ARCH_NAME}")
     sys.exit(1)
 
-if sys.argv[2] == "pyvframe":
+if sys.argv[2] == "deepframe":
     cache = f"vcpkg_cache_pyvframe_{ARCH_NAME}.zip"
 else:
     print("wrong preset")
@@ -70,7 +70,7 @@ else:
     print(
         (
             f"wrong command: {sys.argv[1]}, usage: manage_cache.py "
-            + "{download|upload} {pyvframe}"
+            + "{download|upload} {deepframe}"
         )
     )
     sys.exit(1)

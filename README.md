@@ -7,10 +7,10 @@ Python module to extract frames from a video file.
 Package provides a simple API to get video frames from a video file. The frames are returned as [buffer view](https://docs.python.org/3/c-api/buffer.html) objects which can be converted to numpy arrays.
 
 ``` python
-import pyvframe
+import deepframe
 import numpy as np
 
-buffer_view = pyvframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
+buffer_view = deepframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
 frames = np.asarray(buffer_view)
 ```
 
@@ -21,7 +21,7 @@ frames = np.asarray(buffer_view)
 - vcpkg
 
 You also need to install python requirements.
-`pip install -r requirements.txt`
+`pip install -r requirements-dev.txt`
 
 ## VCPkg Setup
 
@@ -49,7 +49,7 @@ python scripts/build.py debug
 python scripts/build.py release
 ```
 
-After the build you can find the python package in `./build/{mode}` or the latest one is always available in `./pyvframe/` which is used to run the tests.
+After the build you can find the python package in `./build/{mode}` or the latest one is always available in `./deepframe/` which is used to run the tests.
 
 ## Test
 

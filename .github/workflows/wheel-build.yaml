@@ -74,7 +74,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-pyvframe-${{ matrix.type }},readwrite"
+      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-deepframe-${{ matrix.type }},readwrite"
     steps:
       - name: clone repository
         uses: actions/checkout@v4.2.2
@@ -95,7 +95,7 @@ jobs:
         shell: bash
         run: |-
           source "venv_${{ matrix.venv }}/bin/activate"
-          python"${{ matrix.python }}" -m pip install -r requirements.txt &&
+          python"${{ matrix.python }}" -m pip install -r requirements-dev.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
           python"${{ matrix.python }}" -m build; deactivate
 
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/upload-artifact@v4.6.1
         if: ${{ always() }}
         with:
-          name: "pyvframe-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels"
+          name: "deepframe-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels"
           path: "dist/*.whl"
 
   get_linux_matrix:
@@ -148,7 +148,7 @@ jobs:
   build_wheels_linux:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
-    runs-on: pyvframe-wheels-${{ matrix.type }}-builder
+    runs-on: deepframe-wheels-${{ matrix.type }}-builder
     container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
     strategy:
       fail-fast: false
@@ -163,7 +163,7 @@ jobs:
 
       - name: download vcpkg cache
         shell: bash
-        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download pyvframe
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download deepframe
 
       - name: install vcpkg
         shell: bash
@@ -172,14 +172,14 @@ jobs:
       - name: build py${{ matrix.python }}
         shell: bash
         run: |-
-          python"${{ matrix.python }}" -m pip install -r requirements.txt &&
+          python"${{ matrix.python }}" -m pip install -r requirements-dev.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
           python"${{ matrix.python }}" -m build
 
       - name: save vcpkg cache
         if: ${{ matrix.python == '3.11' }}
         shell: bash
-        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload pyvframe
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py upload deepframe
 
       - name: run tests
         shell: bash
@@ -192,4 +192,4 @@ jobs:
           TYPE: ${{ matrix.type }}
           PYTHON: ${{ matrix.python }}
         shell: bash
-        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/upload_wheels.py pyvframe
+        run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/upload_wheels.py deepframe

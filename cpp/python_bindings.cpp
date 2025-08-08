@@ -46,7 +46,7 @@ compute_indexes(const std::variant<int64_t, pybind11::slice, pybind11::list, pyb
 
 } // namespace
 
-PYBIND11_MODULE(pyvframe, m)
+PYBIND11_MODULE(deepframe, m)
 {
     py::class_<core::buffer, std::shared_ptr<core::buffer>>(m, "Buffer", py::buffer_protocol())
         .def_buffer([](core::buffer& buf) -> py::buffer_info {

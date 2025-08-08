@@ -1,10 +1,10 @@
 {
-    "name": "pyvframe",
-    "version": "0.0.1",
+    "name": "deepframe",
+    "version": "0.1.0",
     "dependencies": [
-      "openssl",
-      "liblzma",
-      "libiconv",
-      "zlib"
+        "openssl",
+        "liblzma",
+        "libiconv",
+        "zlib"
     ]
-  }
+}

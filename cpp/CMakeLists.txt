@@ -7,7 +7,7 @@ endif ()
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
-project(pyvframe_project LANGUAGES CXX)
+project(deepframe_project LANGUAGES CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -26,30 +26,30 @@ find_package(pybind11 REQUIRED CONFIG HINTS ${PYBIND11_CMAKE_DIR})
 find_package(OpenSSL REQUIRED)
 
 # Add Python module
-pybind11_add_module(pyvframe python_bindings.cpp)
+pybind11_add_module(deepframe python_bindings.cpp)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/findFFmpeg.cmake)
 if (TARGET ffmpeg_ep)
-    add_dependencies(pyvframe ffmpeg_ep)
+    add_dependencies(deepframe ffmpeg_ep)
 endif()
 
 ensure_ffmpeg()
 
-target_include_directories(pyvframe PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_sources(pyvframe PRIVATE video.cpp)
-target_link_libraries(pyvframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg OpenSSL::SSL OpenSSL::Crypto)
+target_include_directories(deepframe PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_sources(deepframe PRIVATE video.cpp)
+target_link_libraries(deepframe PRIVATE ${FFMPEG_LIBRARIES_LIST} FFmpeg::FFmpeg OpenSSL::SSL OpenSSL::Crypto)
 
-# Remove all pyvframe.* files
-file(GLOB pyvframe_files "${CMAKE_INSTALL_PREFIX}/pyvframe.*")
-if (pyvframe_files)
-    file(REMOVE ${pyvframe_files})
+# Remove all deepframe.* files
+file(GLOB deepframe_files "${CMAKE_INSTALL_PREFIX}/deepframe.*")
+if (deepframe_files)
+    file(REMOVE ${deepframe_files})
 endif()
 
 # Installation
-install(TARGETS pyvframe DESTINATION ${CMAKE_INSTALL_PREFIX}/)
+install(TARGETS deepframe DESTINATION ${CMAKE_INSTALL_PREFIX}/)
 
-add_custom_command(TARGET pyvframe POST_BUILD
-        COMMAND echo "include pyvframe/pyvframe${PYTHON_MODULE_EXTENSION}" > "${CMAKE_CURRENT_SOURCE_DIR}/../MANIFEST.in"
+add_custom_command(TARGET deepframe POST_BUILD
+        COMMAND echo "include deepframe/deepframe${PYTHON_MODULE_EXTENSION}" > "${CMAKE_CURRENT_SOURCE_DIR}/../MANIFEST.in"
         COMMENT "Created ${CMAKE_CURRENT_SOURCE_DIR}/../MANIFEST.in"
     )
 
@@ -64,12 +64,12 @@ else()
 endif()
 
 # Define the symlink name dynamically
-set(PYTHON_SYMLINK_NAME "pyvframe${PYTHON_LIB_EXTENSION}")
+set(PYTHON_SYMLINK_NAME "deepframe${PYTHON_LIB_EXTENSION}")
 
 # Create a symbolic link
-add_custom_command(TARGET pyvframe POST_BUILD
+add_custom_command(TARGET deepframe POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E create_symlink 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../pyvframe/pyvframe${PYTHON_MODULE_EXTENSION}" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../pyvframe/${PYTHON_SYMLINK_NAME}"
-    COMMENT "Created symbolic link ${PYTHON_SYMLINK_NAME} -> pyvframe${PYTHON_MODULE_EXTENSION}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../deepframe/deepframe${PYTHON_MODULE_EXTENSION}" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/../deepframe/${PYTHON_SYMLINK_NAME}"
+    COMMENT "Created symbolic link ${PYTHON_SYMLINK_NAME} -> deepframe${PYTHON_MODULE_EXTENSION}"
 )
