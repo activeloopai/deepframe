@@ -1,4 +1,4 @@
-name: PyVFrame Wheels Build
+name: DeepFrame Wheels Build
 
 permissions:
   contents: read
@@ -50,7 +50,6 @@ jobs:
           if "${{ inputs.build_mac_arm }}" == "true":
             runner_types.append("xlarge")
           python_to_venv = {
-              '3.8' : ['8'],
               '3.9' : ['9'],
               '3.10': ['10'],
               '3.11': ['11'],
@@ -130,7 +129,6 @@ jobs:
           if "${{ inputs.build_linux_arm }}" == "true":
             runner_types.append("aarch64")
           python_to_venv = {
-              '3.8' : ['8'],
               '3.9' : ['9'],
               '3.10': ['10'],
               '3.11': ['11'],
@@ -148,7 +146,7 @@ jobs:
   build_wheels_linux:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
-    runs-on: deepframe-wheels-${{ matrix.type }}-builder
+    runs-on: ${{ matrix.type == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
     strategy:
       fail-fast: false

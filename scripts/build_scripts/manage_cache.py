@@ -40,7 +40,7 @@ else:
     sys.exit(1)
 
 if sys.argv[2] == "deepframe":
-    cache = f"vcpkg_cache_pyvframe_{ARCH_NAME}.zip"
+    cache = f"vcpkg_cache_deepframe_{ARCH_NAME}.zip"
 else:
     print("wrong preset")
     sys.exit(1)
