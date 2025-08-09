@@ -1,7 +1,7 @@
 import deepframe
 
 def test_get_video_info():
-    info = deepframe.get_video_info("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
+    info = deepframe.get_info("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
     assert info["duration"] == 14315000
     assert info["fps"] == 24.0
     assert info["width"] == 1280

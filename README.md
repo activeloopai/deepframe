@@ -6,11 +6,28 @@ Python module to extract frames from a video file.
 
 Package provides a simple API to get video frames from a video file. The frames are returned as [buffer view](https://docs.python.org/3/c-api/buffer.html) objects which can be converted to numpy arrays.
 
-``` python
+```python
 import deepframe
 import numpy as np
 
-buffer_view = deepframe.extract_video_frames_from_video_at_url('path/to/video.mp4')
+# Extract whole video as a buffer view
+buffer_view = deepframe.extract_frames('path/to/video.mp4')
+frames = np.asarray(buffer_view)
+```
+
+```python
+import deepframe
+import numpy as np
+# Extract first 100 frames from a video file
+buffer_view = deepframe.extract_frames('path/to/video.mp4', slice(0, 100))
+frames = np.asarray(buffer_view)
+```
+
+```python
+import deepframe
+import numpy as np
+# Extract each 10th frame from a video file
+buffer_view = deepframe.extract_frames('path/to/video.mp4', slice(0, None, 10))
 frames = np.asarray(buffer_view)
 ```
 

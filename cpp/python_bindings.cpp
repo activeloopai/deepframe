@@ -64,7 +64,7 @@ PYBIND11_MODULE(deepframe, m)
         });
 
     m.def(
-        "extract_video_frames_from_video_at_url",
+        "extract_frames",
         [](const std::string& url,
            std::variant<int64_t, py::slice, py::list, py::tuple>& index,
            int64_t max_size = std::numeric_limits<int64_t>::max()) {
@@ -76,7 +76,7 @@ PYBIND11_MODULE(deepframe, m)
         py::arg("max_size") = std::numeric_limits<int64_t>::max());
 
     m.def(
-        "get_video_info",
+        "get_info",
         [](const std::string& url) {
             return codecs::get_video_info(url);
         },
