@@ -121,17 +121,6 @@ jobs:
           deactivate
           echo -e "\n[bdist_wheel]\nplat-name = ${{ steps.platform-name.outputs.platform }}" >> setup.cfg
 
-      - name: install bison
-        run: |
-          if ! (bison --version); then
-            brew install bison
-            BISON_PREFIX=$(brew --prefix bison)
-            echo "Bison prefix is $BISON_PREFIX"
-            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $GITHUB_ENV
-            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $HOME/.bash_profile
-            echo "export PATH=\"$BISON_PREFIX/bin:\$PATH\"" >> $HOME/.zshrc
-          fi
-
       - name: install vcpkg
         shell: bash
         run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 6f29f12e82a8293156836ad81cc9bf5af41fe836 && ./bootstrap-vcpkg.sh
