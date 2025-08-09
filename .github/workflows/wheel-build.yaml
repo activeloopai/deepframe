@@ -144,7 +144,6 @@ jobs:
           CMAKE_PATH=$(whereis cmake | awk '{print $2}')
           CMAKE_DIR=$(dirname "$CMAKE_PATH")
           echo "$CMAKE_DIR" >> $GITHUB_PATH
-          export PATH="/opt/brew/opt/bison/bin:$PATH"
           source "venv_${{ matrix.venv }}/bin/activate"
           python"${{ matrix.python }}" -m pip install -r requirements-dev.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
