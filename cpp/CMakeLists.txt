@@ -4,10 +4,29 @@ if (NOT DEFINED ENV{VCPKG_ROOT})
     message(FATAL_ERROR "You must set VCPKG_ROOT environment variable to point to your vcpkg installation")
 endif ()
 
+# Set vcpkg triplet before including the toolchain
+if (DEFINED ENV{VCPKG_TARGET_TRIPLET})
+    set(VCPKG_TARGET_TRIPLET "$ENV{VCPKG_TARGET_TRIPLET}" CACHE STRING "Vcpkg target triplet")
+    message(STATUS "Setting VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+endif()
+
+if (DEFINED ENV{VCPKG_HOST_TRIPLET})
+    set(VCPKG_HOST_TRIPLET "$ENV{VCPKG_HOST_TRIPLET}" CACHE STRING "Vcpkg host triplet")
+    message(STATUS "Setting VCPKG_HOST_TRIPLET: ${VCPKG_HOST_TRIPLET}")
+endif()
+
 set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
 project(deepframe_project LANGUAGES CXX)
+
+# Verify cross-compilation setup
+if (APPLE AND DEFINED CMAKE_OSX_ARCHITECTURES)
+    message(STATUS "Target architecture: ${CMAKE_OSX_ARCHITECTURES}")
+    if (CMAKE_OSX_ARCHITECTURES MATCHES "x86_64" AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64")
+        message(STATUS "Cross-compiling x86_64 on ARM64 host")
+    endif()
+endif()
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)

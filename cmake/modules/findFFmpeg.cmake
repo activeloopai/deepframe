@@ -1,13 +1,35 @@
 include(ExternalProject)  
 
 set(DEFAULT_PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
-set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext)
-set(ffmpeg_URL "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n7.1.tar.gz")
-set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext/ffmpeg)
-set(ffmpeg_SHA256_HASH 7ddad2d992bd250a6c56053c26029f7e728bebf0f37f80cf3f8a0e6ec706431a)
-set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext")
 
-set(ffmpeg_PKG_CONFIG_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig:${DEFAULT_PARENT_DIR}/.ext/lib/pkgconfig")
+# Make installation directory architecture-specific
+# Use target architecture from CMAKE_OSX_ARCHITECTURES for cross-compilation
+if(APPLE)
+    if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext-arm64")
+        set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext-arm64)
+        set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext-arm64/ffmpeg)
+    elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
+        set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext-x86_64")
+        set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext-x86_64)
+        set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext-x86_64/ffmpeg)
+    endif()
+elseif(UNIX)
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL aarch64)
+        set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext-aarch64")
+        set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext-aarch64)
+        set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext-aarch64/ffmpeg)
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64)
+        set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext-x86_64")
+        set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext-x86_64)
+        set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext-x86_64/ffmpeg)
+    endif()
+endif()
+
+set(ffmpeg_URL "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n7.1.tar.gz")
+set(ffmpeg_SHA256_HASH 7ddad2d992bd250a6c56053c26029f7e728bebf0f37f80cf3f8a0e6ec706431a)
+
+set(ffmpeg_PKG_CONFIG_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pkgconfig:${ffmpeg_INSTALL_DIR}/lib/pkgconfig")
 
 macro(check_lib_existence LIB_NAME)
     find_path(${LIB_NAME}_EXISTS
@@ -37,16 +59,16 @@ macro(build_ffmpeg_once)
         set(EXTRA_ARGUMENTS)
         if(APPLE)
             list(APPEND EXTRA_ARGUMENTS "--target-os=darwin")
-            if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL arm64)
+            if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=arm64")
-            elseif(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL x86_64)
+            elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=x86_64")
             endif()
         elseif(UNIX)
             list(APPEND EXTRA_ARGUMENTS "--target-os=linux")
-            if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL aarch64)
+            if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL aarch64)
                 list(APPEND EXTRA_ARGUMENTS "--arch=arm64")
-            elseif(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL x86_64)
+            elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64)
                 list(APPEND EXTRA_ARGUMENTS "--arch=x86_64")
             endif()
         endif()
@@ -54,13 +76,21 @@ macro(build_ffmpeg_once)
         set(FFMPEG_EP_DEPENDS)
 
         message(STATUS "Building FFmpeg with extra arguments: ${EXTRA_ARGUMENTS}")
+        message(STATUS "FFmpeg target architecture: ${CMAKE_OSX_ARCHITECTURES}")
+        message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
+        message(STATUS "FFmpeg install directory: ${ffmpeg_INSTALL_DIR}")
 
         ExternalProject_Add(ffmpeg_ep
             SOURCE_DIR ${ffmpeg_SOURCE_DIR}
             URL ${ffmpeg_URL}
             URL_HASH SHA256=${ffmpeg_SHA256_HASH}
             CONFIGURE_COMMAND
-                ${CMAKE_COMMAND} -E env PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH} ${ffmpeg_SOURCE_DIR}/configure
+                ${CMAKE_COMMAND} -E env 
+                    PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
+                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+                    ${ffmpeg_SOURCE_DIR}/configure
                     --quiet
                     --prefix=${ffmpeg_INSTALL_DIR}
                     --disable-programs
@@ -90,8 +120,18 @@ macro(build_ffmpeg_once)
             BUILD_IN_SOURCE TRUE
             PATCH_COMMAND 
                 patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
-            BUILD_COMMAND $(MAKE)
-            INSTALL_COMMAND $(MAKE) install
+            BUILD_COMMAND 
+                ${CMAKE_COMMAND} -E env 
+                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+                    $(MAKE)
+            INSTALL_COMMAND 
+                ${CMAKE_COMMAND} -E env 
+                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+                    $(MAKE) install
             DEPENDS ${FFMPEG_EP_DEPENDS}
             ${EP_LOG_OPTIONS}
         )
