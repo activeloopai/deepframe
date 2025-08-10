@@ -2,6 +2,7 @@
 
 Python module to extract frames from a video file.
 
+## Installation
 ```
 pip install deepframe
 ```
