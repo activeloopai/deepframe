@@ -2,6 +2,10 @@
 
 Python module to extract frames from a video file.
 
+```
+pip install deepframe
+```
+
 ## API
 
 Package provides a simple API to get video frames from a video file. The frames are returned as [buffer view](https://docs.python.org/3/c-api/buffer.html) objects which can be converted to numpy arrays.
