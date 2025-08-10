@@ -1,11 +1,11 @@
-include(ExternalProject)  
+include(ExternalProject)
 
 set(DEFAULT_PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 # Make installation directory architecture-specific
 # Use target architecture from CMAKE_OSX_ARCHITECTURES for cross-compilation
 if(APPLE)
-    if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
         set(ffmpeg_INSTALL_DIR "${DEFAULT_PARENT_DIR}/.ext-arm64")
         set(ffmpeg_BUILD_INSTALL_PREFIX ${DEFAULT_PARENT_DIR}/.ext-arm64)
         set(ffmpeg_SOURCE_DIR ${DEFAULT_PARENT_DIR}/.ext-arm64/ffmpeg)
@@ -43,29 +43,49 @@ set(FFMPEG_LIBRARIES_LIST libavformat libavcodec libavfilter libavutil libswresa
 
 macro(build_ffmpeg_once)
     set(ffmpeg_NEED_BUILD 0)
-    if (NOT EXISTS ${ffmpeg_INSTALL_DIR}/lib)
+
+    if(NOT EXISTS ${ffmpeg_INSTALL_DIR}/lib)
         set(ffmpeg_NEED_BUILD 1)
     endif()
+
     foreach(LIB_NAME ${FFMPEG_LIBRARIES_LIST})
         check_lib_existence(${LIB_NAME})
-        if (${LIB_NAME}_EXISTS STREQUAL ${LIB_NAME}_EXISTS-NOTFOUND)
+
+        if(${LIB_NAME}_EXISTS STREQUAL ${LIB_NAME}_EXISTS-NOTFOUND)
             set(ffmpeg_NEED_BUILD 1)
         endif()
     endforeach()
 
-    if (NOT TARGET ffmpeg_ep AND ${ffmpeg_NEED_BUILD})
+    if(NOT TARGET ffmpeg_ep AND ${ffmpeg_NEED_BUILD})
         message(STATUS "Building FFmpeg from source")
 
         set(EXTRA_ARGUMENTS)
+
         if(APPLE)
             list(APPEND EXTRA_ARGUMENTS "--target-os=darwin")
-            if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+
+            if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=arm64")
             elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=x86_64")
             endif()
+
+            find_package(OpenSSL REQUIRED)
+
+            if(OpenSSL_FOUND)
+                get_target_property(OPENSSL_INCLUDE_DIR OpenSSL::SSL INTERFACE_INCLUDE_DIRECTORIES)
+                get_target_property(OPENSSL_SSL_LOCATION OpenSSL::SSL IMPORTED_LOCATION)
+
+                get_filename_component(OPENSSL_LIB_DIR ${OPENSSL_SSL_LOCATION} DIRECTORY)
+
+                list(APPEND EXTRA_ARGUMENTS "--extra-cflags=-I${OPENSSL_INCLUDE_DIR}")
+                list(APPEND EXTRA_ARGUMENTS "--extra-ldflags=-L${OPENSSL_LIB_DIR}")
+
+                message(STATUS "Found OpenSSL: ${OPENSSL_INCLUDE_DIR} and ${OPENSSL_LIB_DIR}")
+            endif()
         elseif(UNIX)
             list(APPEND EXTRA_ARGUMENTS "--target-os=linux")
+
             if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL aarch64)
                 list(APPEND EXTRA_ARGUMENTS "--arch=arm64")
             elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL x86_64)
@@ -85,58 +105,58 @@ macro(build_ffmpeg_once)
             URL ${ffmpeg_URL}
             URL_HASH SHA256=${ffmpeg_SHA256_HASH}
             CONFIGURE_COMMAND
-                ${CMAKE_COMMAND} -E env 
-                    PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
-                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
-                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
-                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-                    ${ffmpeg_SOURCE_DIR}/configure
-                    --quiet
-                    --prefix=${ffmpeg_INSTALL_DIR}
-                    --disable-programs
-                    --disable-logging
-                    --disable-shared 
-                    --enable-static 
-                    --disable-doc
-                    --disable-htmlpages
-                    --disable-manpages
-                    --disable-podpages
-                    --disable-txtpages
-                    --enable-ffmpeg 
-                    --disable-ffplay
-                    --disable-ffprobe 
-                    --disable-x86asm
-                    --disable-avdevice 
-                    --enable-avcodec 
-                    --enable-avformat 
-                    --enable-swscale 
-                    --enable-pic
-                    --disable-asm
-                    --disable-debug
-                    --disable-programs
-                    --disable-libdrm
-                    --enable-openssl
-                    ${EXTRA_ARGUMENTS}
+            ${CMAKE_COMMAND} -E env
+            PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
+            VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+            VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+            CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+            <SOURCE_DIR>/configure
+            --quiet
+            --prefix=${ffmpeg_INSTALL_DIR}
+            --disable-programs
+            --disable-logging
+            --disable-shared
+            --enable-static
+            --disable-doc
+            --disable-htmlpages
+            --disable-manpages
+            --disable-podpages
+            --disable-txtpages
+            --enable-ffmpeg
+            --disable-ffplay
+            --disable-ffprobe
+            --disable-x86asm
+            --disable-avdevice
+            --enable-avcodec
+            --enable-avformat
+            --enable-swscale
+            --enable-pic
+            --disable-asm
+            --disable-debug
+            --disable-programs
+            --disable-libdrm
+            --enable-openssl
+            ${EXTRA_ARGUMENTS}
             BUILD_IN_SOURCE TRUE
-            PATCH_COMMAND 
-                patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
-            BUILD_COMMAND 
-                ${CMAKE_COMMAND} -E env 
-                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
-                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
-                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-                    $(MAKE)
-            INSTALL_COMMAND 
-                ${CMAKE_COMMAND} -E env 
-                    VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
-                    VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
-                    CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-                    $(MAKE) install
+
+            # PATCH_COMMAND
+            # patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
+            BUILD_COMMAND
+            ${CMAKE_COMMAND} -E env
+            VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+            VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+            CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+            $(MAKE)
+            INSTALL_COMMAND
+            ${CMAKE_COMMAND} -E env
+            VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+            VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+            CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+            $(MAKE) install
             DEPENDS ${FFMPEG_EP_DEPENDS}
             ${EP_LOG_OPTIONS}
         )
     endif()
-
 endmacro()
 
 build_ffmpeg_once()
@@ -160,20 +180,20 @@ macro(ensure_ffmpeg)
     find_package(ZLIB REQUIRED)
     list(APPEND FFMPEG_LIBRARIES_LIST ZLIB::ZLIB)
 
-    #TODO come up with proper solution here
+    # TODO come up with proper solution here
     add_library(FFmpeg::FFmpeg INTERFACE IMPORTED GLOBAL)
-    #target_link_libraries(FFmpeg::FFmpeg INTERFACE
-    #    ${ffmpeg_INSTALL_DIR}/lib/libavcodec${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #    ${ffmpeg_INSTALL_DIR}/lib/libavformat${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #    ${ffmpeg_INSTALL_DIR}/lib/libavfilter${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #    ${ffmpeg_INSTALL_DIR}/lib/libavutil${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #    ${ffmpeg_INSTALL_DIR}/lib/libswresample${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #    ${ffmpeg_INSTALL_DIR}/lib/libswscale${CMAKE_STATIC_LIBRARY_SUFFIX}
-    #)
 
-    if (APPLE)
+    # target_link_libraries(FFmpeg::FFmpeg INTERFACE
+    # ${ffmpeg_INSTALL_DIR}/lib/libavcodec${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # ${ffmpeg_INSTALL_DIR}/lib/libavformat${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # ${ffmpeg_INSTALL_DIR}/lib/libavfilter${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # ${ffmpeg_INSTALL_DIR}/lib/libavutil${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # ${ffmpeg_INSTALL_DIR}/lib/libswresample${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # ${ffmpeg_INSTALL_DIR}/lib/libswscale${CMAKE_STATIC_LIBRARY_SUFFIX}
+    # )
+    if(APPLE)
         set_target_properties(FFmpeg::FFmpeg
-                      PROPERTIES INTERFACE_LINK_LIBRARIES
-                                 "-framework VideoToolbox -framework CoreFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices")
+            PROPERTIES INTERFACE_LINK_LIBRARIES
+            "-framework VideoToolbox -framework CoreFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices")
     endif()
 endmacro()
