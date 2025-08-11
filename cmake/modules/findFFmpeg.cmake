@@ -59,30 +59,119 @@ macro(build_ffmpeg_once)
     if(NOT TARGET ffmpeg_ep AND ${ffmpeg_NEED_BUILD})
         message(STATUS "Building FFmpeg from source")
 
+        message(STATUS "Building FFmpeg from source")
+
         set(EXTRA_ARGUMENTS)
+        set(OPENSSL_EXTRA_CFLAGS "")
+        set(OPENSSL_EXTRA_LDFLAGS "")
+        set(OPENSSL_EXTRA_LIBS "")
 
         if(APPLE)
             list(APPEND EXTRA_ARGUMENTS "--target-os=darwin")
 
             if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=arm64")
+                set(ARCH_FOR_BREW "arm64")
             elseif(CMAKE_OSX_ARCHITECTURES MATCHES "x86_64")
                 list(APPEND EXTRA_ARGUMENTS "--arch=x86_64")
+                set(ARCH_FOR_BREW "x86_64")
             endif()
 
-            find_package(OpenSSL REQUIRED)
+            set(OPENSSL_FOUND_SUCCESS FALSE)
 
-            if(OpenSSL_FOUND)
-                get_target_property(OPENSSL_INCLUDE_DIR OpenSSL::SSL INTERFACE_INCLUDE_DIRECTORIES)
-                get_target_property(OPENSSL_SSL_LOCATION OpenSSL::SSL IMPORTED_LOCATION)
+            if(DEFINED ARCH_FOR_BREW)
+                execute_process(
+                    COMMAND arch -${ARCH_FOR_BREW} brew --prefix openssl@3
+                    OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                    RESULT_VARIABLE BREW_RESULT
+                )
 
-                get_filename_component(OPENSSL_LIB_DIR ${OPENSSL_SSL_LOCATION} DIRECTORY)
-
-                list(APPEND EXTRA_ARGUMENTS "--extra-cflags=-I${OPENSSL_INCLUDE_DIR}")
-                list(APPEND EXTRA_ARGUMENTS "--extra-ldflags=-L${OPENSSL_LIB_DIR}")
-
-                message(STATUS "Found OpenSSL: ${OPENSSL_INCLUDE_DIR} and ${OPENSSL_LIB_DIR}")
+                if(BREW_RESULT EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+                    message(STATUS "Found OpenSSL via brew (arch-specific): ${BREW_OPENSSL_PREFIX}")
+                    set(OPENSSL_EXTRA_CFLAGS "-I${BREW_OPENSSL_PREFIX}/include")
+                    set(OPENSSL_EXTRA_LDFLAGS "-L${BREW_OPENSSL_PREFIX}/lib")
+                    set(OPENSSL_EXTRA_LIBS "-lssl -lcrypto")
+                    set(ffmpeg_PKG_CONFIG_PATH "${ffmpeg_PKG_CONFIG_PATH}:${BREW_OPENSSL_PREFIX}/lib/pkgconfig")
+                    set(OPENSSL_FOUND_SUCCESS TRUE)
+                endif()
             endif()
+
+            if(NOT OPENSSL_FOUND_SUCCESS)
+                execute_process(
+                    COMMAND brew --prefix openssl@3
+                    OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                    RESULT_VARIABLE BREW_RESULT
+                )
+
+                if(BREW_RESULT EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+                    message(STATUS "Found OpenSSL via brew (generic): ${BREW_OPENSSL_PREFIX}")
+                    set(OPENSSL_EXTRA_CFLAGS "-I${BREW_OPENSSL_PREFIX}/include")
+                    set(OPENSSL_EXTRA_LDFLAGS "-L${BREW_OPENSSL_PREFIX}/lib")
+                    set(OPENSSL_EXTRA_LIBS "-lssl -lcrypto")
+                    set(ffmpeg_PKG_CONFIG_PATH "${ffmpeg_PKG_CONFIG_PATH}:${BREW_OPENSSL_PREFIX}/lib/pkgconfig")
+                    set(OPENSSL_FOUND_SUCCESS TRUE)
+                endif()
+            endif()
+
+            if(NOT OPENSSL_FOUND_SUCCESS)
+                execute_process(
+                    COMMAND brew --prefix openssl
+                    OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                    RESULT_VARIABLE BREW_RESULT
+                )
+
+                if(BREW_RESULT EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+                    message(STATUS "Found OpenSSL via brew (fallback): ${BREW_OPENSSL_PREFIX}")
+                    set(OPENSSL_EXTRA_CFLAGS "-I${BREW_OPENSSL_PREFIX}/include")
+                    set(OPENSSL_EXTRA_LDFLAGS "-L${BREW_OPENSSL_PREFIX}/lib")
+                    set(OPENSSL_EXTRA_LIBS "-lssl -lcrypto")
+                    set(ffmpeg_PKG_CONFIG_PATH "${ffmpeg_PKG_CONFIG_PATH}:${BREW_OPENSSL_PREFIX}/lib/pkgconfig")
+                    set(OPENSSL_FOUND_SUCCESS TRUE)
+                endif()
+            endif()
+
+            # Method 4: Try CMake's FindOpenSSL
+            if(NOT OPENSSL_FOUND_SUCCESS)
+                find_package(OpenSSL QUIET)
+
+                if(OpenSSL_FOUND)
+                    message(STATUS "Found OpenSSL via CMake: ${OPENSSL_INCLUDE_DIR}")
+                    set(OPENSSL_EXTRA_CFLAGS "-I${OPENSSL_INCLUDE_DIR}")
+                    get_target_property(OPENSSL_SSL_LOCATION OpenSSL::SSL IMPORTED_LOCATION)
+
+                    if(OPENSSL_SSL_LOCATION)
+                        get_filename_component(OPENSSL_LIB_DIR ${OPENSSL_SSL_LOCATION} DIRECTORY)
+                        set(OPENSSL_EXTRA_LDFLAGS "-L${OPENSSL_LIB_DIR}")
+                    endif()
+
+                    set(OPENSSL_EXTRA_LIBS "-lssl -lcrypto")
+                    set(OPENSSL_FOUND_SUCCESS TRUE)
+                endif()
+            endif()
+
+            if(NOT OPENSSL_FOUND_SUCCESS)
+                message(WARNING "Could not find OpenSSL for architecture ${CMAKE_OSX_ARCHITECTURES}. FFmpeg build may fail.")
+            else()
+                # Add OpenSSL flags to extra arguments
+                if(OPENSSL_EXTRA_CFLAGS)
+                    list(APPEND EXTRA_ARGUMENTS "--extra-cflags=${OPENSSL_EXTRA_CFLAGS}")
+                endif()
+
+                if(OPENSSL_EXTRA_LDFLAGS)
+                    list(APPEND EXTRA_ARGUMENTS "--extra-ldflags=${OPENSSL_EXTRA_LDFLAGS}")
+                endif()
+
+                if(OPENSSL_EXTRA_LIBS)
+                    list(APPEND EXTRA_ARGUMENTS "--extra-libs=${OPENSSL_EXTRA_LIBS}")
+                endif()
+            endif()
+
         elseif(UNIX)
             list(APPEND EXTRA_ARGUMENTS "--target-os=linux")
 
@@ -100,12 +189,23 @@ macro(build_ffmpeg_once)
         message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
         message(STATUS "FFmpeg install directory: ${ffmpeg_INSTALL_DIR}")
 
+        message(STATUS "extra arguments: ${EXTRA_ARGUMENTS}")
+
+        message("${CMAKE_COMMAND} -E env
+            PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
+            VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+            VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
+            CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+            <SOURCE_DIR>/configure
+            --quiet")
+
         ExternalProject_Add(ffmpeg_ep
             SOURCE_DIR ${ffmpeg_SOURCE_DIR}
             URL ${ffmpeg_URL}
             URL_HASH SHA256=${ffmpeg_SHA256_HASH}
             CONFIGURE_COMMAND
             ${CMAKE_COMMAND} -E env
+
             PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
             VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
             VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
@@ -138,15 +238,14 @@ macro(build_ffmpeg_once)
             --enable-openssl
             ${EXTRA_ARGUMENTS}
             BUILD_IN_SOURCE TRUE
-
-            # PATCH_COMMAND
-            # patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
+            PATCH_COMMAND
+            patch -p1 < ${DEFAULT_PARENT_DIR}/cmake/modules/url_max_length_fix.patch
             BUILD_COMMAND
             ${CMAKE_COMMAND} -E env
             VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
             VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
             CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-            $(MAKE)
+            $(MAKE) -j4
             INSTALL_COMMAND
             ${CMAKE_COMMAND} -E env
             VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
