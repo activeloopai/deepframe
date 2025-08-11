@@ -153,9 +153,6 @@ jobs:
           # Clean architecture-specific FFmpeg installations
           rm -rf .ext-*
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-
       - name: build py${{ matrix.python }}
         env:
           CMAKE_OSX_ARCHITECTURES: ${{ steps.platform-name.outputs.arch }}
