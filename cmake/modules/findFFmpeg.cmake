@@ -58,9 +58,6 @@ macro(build_ffmpeg_once)
 
     if(NOT TARGET ffmpeg_ep AND ${ffmpeg_NEED_BUILD})
         message(STATUS "Building FFmpeg from source")
-
-        message(STATUS "Building FFmpeg from source")
-
         set(EXTRA_ARGUMENTS)
         set(OPENSSL_EXTRA_CFLAGS "")
         set(OPENSSL_EXTRA_LDFLAGS "")
@@ -136,7 +133,6 @@ macro(build_ffmpeg_once)
                 endif()
             endif()
 
-            # Method 4: Try CMake's FindOpenSSL
             if(NOT OPENSSL_FOUND_SUCCESS)
                 find_package(OpenSSL QUIET)
 
@@ -188,16 +184,6 @@ macro(build_ffmpeg_once)
         message(STATUS "FFmpeg target architecture: ${CMAKE_OSX_ARCHITECTURES}")
         message(STATUS "VCPKG_TARGET_TRIPLET: ${VCPKG_TARGET_TRIPLET}")
         message(STATUS "FFmpeg install directory: ${ffmpeg_INSTALL_DIR}")
-
-        message(STATUS "extra arguments: ${EXTRA_ARGUMENTS}")
-
-        message("${CMAKE_COMMAND} -E env
-            PKG_CONFIG_PATH=${ffmpeg_PKG_CONFIG_PATH}
-            VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
-            VCPKG_HOST_TRIPLET=${VCPKG_HOST_TRIPLET}
-            CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-            <SOURCE_DIR>/configure
-            --quiet")
 
         ExternalProject_Add(ffmpeg_ep
             SOURCE_DIR ${ffmpeg_SOURCE_DIR}

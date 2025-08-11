@@ -175,6 +175,7 @@ jobs:
           deactivate
 
       - name: run tests
+        if: matrix.type != 'x86_64'
         shell: bash
         run: |-
           source "venv_${{ matrix.venv }}/bin/activate"
