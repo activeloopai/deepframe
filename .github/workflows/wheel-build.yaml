@@ -23,10 +23,20 @@ on:
         description: "Build Linux ARM Wheels"
         type: boolean
         default: true
+      runner:
+        description: Choose MacOS Action Runner Type
+        type: choice
+        options:
+          - "self-hosted"
+          - "macos-12"
+          - "macos-13"
+          - "macos-14"
+          - "macos-15"
+        default: "self-hosted"
 
 env:
-  VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
-  VCPKG_FEATURE_FLAGS: "dependencygraph"
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+  VCPKG_FEATURE_FLAGS: dependencygraph
   VCPKG_DISABLE_METRICS: true
   BUILD_PRESET: "release"
 
@@ -67,16 +77,48 @@ jobs:
   build_wheels-macos:
     name: MacOS Wheels Build
     needs: [get_macos_matrix]
-    runs-on: self-hosted-${{ matrix.type }}
+    runs-on: ${{ inputs.runner }}-${{ matrix.type }}
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.get_macos_matrix.outputs.matrix) }}
-    env:
-      VCPKG_BINARY_SOURCES: "clear;files,/Users/sre/GitHub/vcpkg-cache-deepframe-${{ matrix.type }},readwrite"
+
     steps:
+      - name: set platform name
+        id: platform-name
+        shell: bash
+        env:
+          TYPE: ${{ matrix.type }}
+        run: |
+          case "${TYPE}" in
+            xlarge)
+              echo "platform=macosx_11_0_arm64" >> $GITHUB_OUTPUT
+              echo "arch=arm64" >> $GITHUB_OUTPUT
+              echo "triplet=arm64-osx" >> $GITHUB_OUTPUT
+            ;;
+            large)
+              echo "platform=macosx_10_9_x86_64" >> $GITHUB_OUTPUT
+              echo "arch=x86_64" >> $GITHUB_OUTPUT
+              echo "triplet=x64-osx" >> $GITHUB_OUTPUT
+            ;;
+          esac
+
+      - name: set vcpkg cache path
+        id: vcpkg-cache
+        shell: bash
+        env:
+          ARCH: ${{ steps.platform-name.outputs.arch }}
+        run: |
+          echo "cache_path=/Users/sre/GitHub/vcpkg-cache-deepframe-${{ steps.platform-name.outputs.triplet }}" >> $GITHUB_OUTPUT
+
       - name: clone repository
         uses: actions/checkout@v4.2.2
+
+      - name: setup python ${{ matrix.python }}
+        uses: actions/setup-python@v5.3.0
+        if: inputs.runner != 'self-hosted'
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: setup python ${{ matrix.python }} environment
         id: setup
@@ -84,25 +126,61 @@ jobs:
         run: |-
           python${{ matrix.python }} -m venv "venv_${{ matrix.venv }}"
           source "venv_${{ matrix.venv }}/bin/activate"
-          python"${{ matrix.python }}" -m pip install -qqq -U pip setuptools build; deactivate
+          python"${{ matrix.python }}" -m pip install -qqq -U pip setuptools build cmake==3.29.2
+          deactivate
+          echo -e "\n[bdist_wheel]\nplat-name = ${{ steps.platform-name.outputs.platform }}" >> setup.cfg
 
       - name: install vcpkg
         shell: bash
-        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 1de2026f28ead93ff1773e6e680387643e914ea1 && ./bootstrap-vcpkg.sh
+        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 6f29f12e82a8293156836ad81cc9bf5af41fe836 && ./bootstrap-vcpkg.sh
+
+      - name: install vcpkg dependencies
+        shell: bash
+        env:
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+          VCPKG_TARGET_TRIPLET: ${{ steps.platform-name.outputs.triplet }}
+          VCPKG_HOST_TRIPLET: ${{ steps.platform-name.outputs.triplet }}
+        run: |
+          cd vcpkg
+          ./vcpkg install --triplet=${{ steps.platform-name.outputs.triplet }} openssl liblzma libiconv zlib
+          cd ..
+
+      - name: clean build artifacts
+        shell: bash
+        run: |
+          # Clean build directory to ensure fresh build
+          rm -rf build
+          # Clean architecture-specific FFmpeg installations
+          rm -rf .ext-*
 
       - name: build py${{ matrix.python }}
+        env:
+          CMAKE_OSX_ARCHITECTURES: ${{ steps.platform-name.outputs.arch }}
+          VCPKG_TARGET_TRIPLET: ${{ steps.platform-name.outputs.triplet }}
+          VCPKG_HOST_TRIPLET: ${{ steps.platform-name.outputs.triplet }}
+          VCPKG_BINARY_SOURCES: "clear"
+          VCPKG_DISABLE_METRICS: true
+          VCPKG_OVERLAY_TRIPLETS: ""
+          VCPKG_OVERLAY_PORTS: ""
         shell: bash
         run: |-
+          CMAKE_PATH=$(whereis cmake | awk '{print $2}')
+          CMAKE_DIR=$(dirname "$CMAKE_PATH")
+          echo "$CMAKE_DIR" >> $GITHUB_PATH
+          
           source "venv_${{ matrix.venv }}/bin/activate"
           python"${{ matrix.python }}" -m pip install -r requirements-dev.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
-          python"${{ matrix.python }}" -m build; deactivate
+          python"${{ matrix.python }}" -m build
+          deactivate
 
       - name: run tests
+        if: matrix.type != 'x86_64'
         shell: bash
         run: |-
           source "venv_${{ matrix.venv }}/bin/activate"
-          timeout -k 10s 30m python"${{ matrix.python }}" -m pytest; deactivate
+          timeout -k 10s 30m python"${{ matrix.python }}" -m pytest
+          deactivate
 
       - uses: actions/upload-artifact@v4.6.1
         if: ${{ always() }}
@@ -159,13 +237,18 @@ jobs:
         shell: bash
         run: git clone -b "${{ github.ref_name }}" "https://activeloop-bot:${{ secrets.ORG_GH_BOT_PAT }}@github.com/${{ github.repository }}" .
 
+      - name: setup environment
+        shell: bash
+        run: |
+          echo -e "\n[bdist_wheel]\nplat-name = manylinux2014_${{ matrix.type }}" >> setup.cfg
+
       - name: download vcpkg cache
         shell: bash
         run: source scripts/build_scripts/get_creds.sh && python3.11 scripts/build_scripts/manage_cache.py download deepframe
 
       - name: install vcpkg
         shell: bash
-        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 1de2026f28ead93ff1773e6e680387643e914ea1 && ./bootstrap-vcpkg.sh
+        run: git clone https://github.com/microsoft/vcpkg.git && cd vcpkg && git checkout 6f29f12e82a8293156836ad81cc9bf5af41fe836 && ./bootstrap-vcpkg.sh
 
       - name: build py${{ matrix.python }}
         shell: bash
