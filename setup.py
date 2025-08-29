@@ -2,7 +2,6 @@ import re
 import sys
 import os
 import urllib
-import urllib.request
 
 from setuptools import setup, find_packages
 from setuptools.dist import Distribution
@@ -47,12 +46,8 @@ config = {
     "packages": find_packages(exclude=["tests"]),
     "distclass": BinaryDistribution,
     "install_requires": install_requires,
-    "extras_require": {},
-    "tests_require": [],
     "include_package_data": True,
     "zip_safe": False,
-    "entry_points": {"console_scripts": []},
-    "dependency_links": [],
     "project_urls": {
         "Source": "https://github.com/activeloopai/deepframe",
     },
