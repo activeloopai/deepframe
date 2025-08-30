@@ -1,6 +1,8 @@
 import re
 import sys
 import os
+import urllib
+
 from setuptools import setup, find_packages
 from setuptools.dist import Distribution
 
@@ -32,9 +34,13 @@ install_requires = [
     numpy_version,
 ]
 
+long_description = urllib.request.urlopen("https://raw.githubusercontent.com/activeloopai/deepframe/refs/heads/main/README.md").read().decode("utf-8")
+
 config = {
     "name": project_name,
-    "version": get_property("__version__"),
+    "version": get_property("__version__"),           #
+    "long_description": long_description,             #
+    "long_description_content_type": "text/markdown", #
     "author": "activeloop.ai",
     "author_email": "support@activeloop.ai",
     "packages": find_packages(exclude=["tests"]),
@@ -42,6 +48,9 @@ config = {
     "install_requires": install_requires,
     "include_package_data": True,
     "zip_safe": False,
+    "project_urls": {
+        "Source": "https://github.com/activeloopai/deepframe",
+    },
 }
 
 setup(**config)
