@@ -25,13 +25,8 @@ def get_property(prop):
     return result.group(1)
 
 
-# Define numpy version based on Python version
-numpy_version = (
-    "numpy>=1.26.0,<2.0.0" if sys.version_info >= (3, 12) else "numpy>=1.24.0,<2.0.0"
-)
-
 install_requires = [
-    numpy_version,
+    "numpy",
 ]
 
 long_description = urllib.request.urlopen("https://raw.githubusercontent.com/activeloopai/deepframe/refs/heads/main/README.md").read().decode("utf-8")
