@@ -207,7 +207,7 @@ jobs:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
     runs-on: ${{ matrix.type == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    container: quay.io/activeloop/gcc-pypa-manylinux_2_28:${{ matrix.type }}
+    container: quay.io/activeloop/gcc-pypa-manylinux:2_28-linux-${{ matrix.type == 'x86_64' && 'amd64' || 'arm64' }}
     strategy:
       fail-fast: false
       matrix:
