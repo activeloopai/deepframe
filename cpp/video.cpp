@@ -1,6 +1,7 @@
 #include "video.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <iostream>
 #include <map>
@@ -171,7 +172,7 @@ core::buffer_ptr extract_video_frames_from_video_at_url_(const std::string& url,
     float frame_rate = av_q2d(videoStream->avg_frame_rate);
     float time_base = av_q2d(videoStream->time_base);
 
-    auto start_pts = static_cast<int64_t>(start_frame / frame_rate / time_base);
+    auto start_pts = std::llround(start_frame / frame_rate / time_base);
     av_seek_frame(formatContext, videoStreamIndex, start_pts, AVSEEK_FLAG_BACKWARD);
 
     int64_t start_pts_in_source = (videoStream->start_time == AV_NOPTS_VALUE) ? 0 : videoStream->start_time;
@@ -182,7 +183,7 @@ core::buffer_ptr extract_video_frames_from_video_at_url_(const std::string& url,
         if (indices_it == indexed_list.end()) {
             return true;
         }
-        auto current_frame = static_cast<int64_t>((frame->pts - start_pts_in_source) * time_base * frame_rate);
+        auto current_frame = std::llround((frame->pts - start_pts_in_source) * time_base * frame_rate);
         if (current_frame > start_frame) {
             std::cerr << "invalid frame position: " << current_frame << " > " << start_frame << std::endl;
             assert(false);
@@ -193,7 +194,7 @@ core::buffer_ptr extract_video_frames_from_video_at_url_(const std::string& url,
 
         if (needs_seek) {
             // Seek to the approximate starting point
-            auto start_pts = static_cast<int64_t>(start_frame / frame_rate / time_base) + start_pts_in_source;
+            auto start_pts = std::llround(start_frame / frame_rate / time_base) + start_pts_in_source;
             av_seek_frame(formatContext, videoStreamIndex, start_pts, AVSEEK_FLAG_BACKWARD);
             avcodec_flush_buffers(codecContext);
 
