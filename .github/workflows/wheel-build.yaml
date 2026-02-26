@@ -167,7 +167,6 @@ jobs:
           CMAKE_PATH=$(whereis cmake | awk '{print $2}')
           CMAKE_DIR=$(dirname "$CMAKE_PATH")
           echo "$CMAKE_DIR" >> $GITHUB_PATH
-          
           source "venv_${{ matrix.venv }}/bin/activate"
           python"${{ matrix.python }}" -m pip install -r requirements-dev.txt &&
           python"${{ matrix.python }}" scripts/build.py "${{ env.BUILD_PRESET }}"
@@ -225,7 +224,7 @@ jobs:
     name: Linux Wheels Build
     needs: [get_linux_matrix]
     runs-on: ${{ matrix.type == 'x86_64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    container: us-central1-docker.pkg.dev/activeloop-ops/operations/pypa-manylinux2014_${{ matrix.type }}
+    container: 067976305224.dkr.ecr.us-east-1.amazonaws.com/gcc-pypa-manylinux_2_28:{{ matrix.type }}
     strategy:
       fail-fast: false
       matrix:
