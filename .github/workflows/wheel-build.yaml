@@ -7,10 +7,6 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
-      build_mac_amd:
-        description: "Build MacOS x86_64 Wheels"
-        type: boolean
-        default: true
       build_mac_arm:
         description: "Build MacOS ARM Wheels"
         type: boolean
@@ -43,7 +39,7 @@ env:
 jobs:
   get_macos_matrix:
     name: Set MacOS Build Matrix
-    if: ${{ inputs.build_mac_amd || inputs.build_mac_arm }}
+    if: ${{ inputs.build_mac_arm }}
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -55,8 +51,6 @@ jobs:
           import os
           import json
           runner_types = []
-          if "${{ inputs.build_mac_amd }}" == "true":
-            runner_types.append("large")
           if "${{ inputs.build_mac_arm }}" == "true":
             runner_types.append("xlarge")
           python_to_venv = {
