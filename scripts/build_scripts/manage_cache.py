@@ -7,7 +7,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError, BotoCoreError
 
-CACHE_BUCKET = os.environ.get("ACTIVELOOP_CACHE_BUCKET", "activeloop-platform-tests")
+CACHE_BUCKET = os.environ.get("ACTIVELOOP_CACHE_BUCKET", "activeloop-dev-tests")
 CACHE_PATH = os.environ.get("VCPKG_CACHE_PATH", "/vcpkg-cache")
 ARCH_NAME = platform.machine().lower()
 

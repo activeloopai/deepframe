@@ -6,7 +6,7 @@ TOKEN="$(curl \
   -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
   "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | yq .value)"
 
-ASSUME_ROLE_ARN=${ASSUME_ROLE_ARN:-arn:aws:iam::067976305224:role/github}
+ASSUME_ROLE_ARN=${ASSUME_ROLE_ARN:-arn:aws:iam::574987031486:role/github}
 
 curl 'https://sts.us-east-1.amazonaws.com' \
   -d 'Action=AssumeRoleWithWebIdentity' \
