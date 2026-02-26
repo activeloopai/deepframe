@@ -84,18 +84,9 @@ jobs:
         env:
           TYPE: ${{ matrix.type }}
         run: |
-          case "${TYPE}" in
-            xlarge)
-              echo "platform=macosx_11_0_arm64" >> $GITHUB_OUTPUT
-              echo "arch=arm64" >> $GITHUB_OUTPUT
-              echo "triplet=arm64-osx" >> $GITHUB_OUTPUT
-            ;;
-            large)
-              echo "platform=macosx_10_9_x86_64" >> $GITHUB_OUTPUT
-              echo "arch=x86_64" >> $GITHUB_OUTPUT
-              echo "triplet=x64-osx" >> $GITHUB_OUTPUT
-            ;;
-          esac
+          echo "platform=macosx_11_0_arm64" >> $GITHUB_OUTPUT
+          echo "arch=arm64" >> $GITHUB_OUTPUT
+          echo "triplet=arm64-osx" >> $GITHUB_OUTPUT
 
       - name: set vcpkg cache path
         id: vcpkg-cache
