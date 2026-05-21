@@ -95,10 +95,10 @@ jobs:
           echo "cache_path=/Users/sre/GitHub/vcpkg-cache-deepframe-${{ steps.platform-name.outputs.triplet }}" >> $GITHUB_OUTPUT
 
       - name: clone repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6.0.2
 
       - name: setup python ${{ matrix.python }}
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v6.2.0
         if: inputs.runner != 'self-hosted'
         with:
           python-version: ${{ matrix.python }}
@@ -164,7 +164,7 @@ jobs:
           timeout -k 10s 30m python"${{ matrix.python }}" -m pytest
           deactivate
 
-      - uses: actions/upload-artifact@v4.6.1
+      - uses: actions/upload-artifact@v7.0.1
         if: ${{ always() }}
         with:
           name: "deepframe-macos-py${{ matrix.python }}-${{ matrix.type }}-wheels"
