@@ -1,7 +1,7 @@
 import re
 import sys
 import os
-import urllib
+import urllib.request
 
 from setuptools import setup, find_packages
 from setuptools.dist import Distribution
@@ -41,6 +41,17 @@ config = {
     "packages": find_packages(exclude=["tests"]),
     "distclass": BinaryDistribution,
     "install_requires": install_requires,
+    "python_requires": ">=3.9",
+    "classifiers": [
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
+        "License :: OSI Approved :: Apache Software License",
+    ],
     "include_package_data": True,
     "zip_safe": False,
     "project_urls": {
