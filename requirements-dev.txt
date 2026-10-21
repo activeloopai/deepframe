@@ -1,6 +1,6 @@
 build
 cmake==3.29.2
 numpy
-pybind11
-pybind11-global
+pybind11>=3.0
+pybind11-global>=3.0
 pytest
