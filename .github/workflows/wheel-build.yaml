@@ -59,7 +59,8 @@ jobs:
               '3.11': ['11'],
               '3.12': ['12'],
               '3.13': ['13'],
-              '3.14': ['14']
+              '3.14': ['14'],
+              '3.15': ['15']
           }
           matrix = [{"python": py, "venv": venv, "type": type}
                     for py, venvs in python_to_venv.items()
@@ -195,7 +196,8 @@ jobs:
               '3.11': ['11'],
               '3.12': ['12'],
               '3.13': ['13'],
-              '3.14': ['14']
+              '3.14': ['14'],
+              '3.15': ['15']
           }
           matrix = [{"python": py, "venv": venv, "type": type}
                     for py, venvs in python_to_venv.items()
